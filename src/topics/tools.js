@@ -125,7 +125,6 @@ module.exports = function (Topics) {
 
         const topicData = await Topics.getTopicFields(tid, ['tid', 'uid', 'cid']);
         const canPin = await privileges.global.can('pin:topics', uid);
-        const isAdminOrMod = await privileges.categories.isAdminOrMod(topicData.cid, uid);
         if (!canPin) {
             throw new Error('[[error:no-privileges]]');
         }

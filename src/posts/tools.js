@@ -40,5 +40,36 @@ module.exports = function (Posts) {
             post = await Posts.parsePost(post);
         }
         return post;
-    }
+    };
+
+    Posts.tools.setPinExpiry = async (pid, expiry, uid) => {
+        if (isNaN(parseInt(expiry, 10)) || expiry <= Date.now()) {
+            throw new Error('[[error:invalid-data]]');
+        }
+
+        const postData = await Posts.getPostFields(pid, ['pid', 'uid', 'cid']);
+        const isAdminOrMod = await privileges.categories.isAdminOrMod(postData.cid, uid);
+        if (!isAdminOrMod) {
+            throw new Error('[[error:no-privileges]]');
+        }
+
+        await Topics.setTopicField(pid, 'pinExpiry', expiry);
+        plugins.hooks.fire('action:topic.setPinExpiry', { post: _.clone(postData), uid: uid });
+    };
+
+    Posts.tools.checkPinExpiry = async (pids) => {
+        const expiry = (await posts.getPostsFields(pids, ['pinExpiry'])).map(obj => obj.pinExpiry);
+        const now = Date.now();
+
+        pids = await Promise.all(pids.map(async (pid, idx) => {
+            if (expiry[idx] && parseInt(expiry[idx], 10) <= now) {
+                await togglePin(pid, 'system', false);
+                return null;
+            }
+
+            return pid;
+        }));
+
+        return pids.filter(Boolean);
+    };
 };

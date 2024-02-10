@@ -124,8 +124,8 @@ module.exports = function (Topics) {
         }
 
         const topicData = await Topics.getTopicFields(tid, ['tid', 'uid', 'cid']);
-        const isAdminOrMod = await privileges.categories.isAdminOrMod(topicData.cid, uid);
-        if (!isAdminOrMod) {
+        const canPin = await privileges.global.can('pin:topics', uid);
+        if (!canPin) {
             throw new Error('[[error:no-privileges]]');
         }
 
@@ -159,7 +159,8 @@ module.exports = function (Topics) {
             throw new Error('[[error:cant-pin-scheduled]]');
         }
 
-        if (uid !== 'system' && !await privileges.topics.isAdminOrMod(tid, uid)) {
+        const canPin = await privileges.global.can('pin:topics', uid);
+        if (uid !== 'system' && !canPin) {
             throw new Error('[[error:no-privileges]]');
         }
 

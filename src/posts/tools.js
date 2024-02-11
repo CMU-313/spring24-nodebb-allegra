@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,20 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const plugins = require('../plugins');
-const privileges = require('../privileges');
-const db = require('../database');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+const lodash_1 = __importDefault(require("lodash"));
+const cache = require("./cache");
+const plugins = require("../plugins");
+const privileges = require("../privileges");
+const db = require("../database");
 module.exports = function (Posts) {
-    Posts.tools.delete = function (uid, pid) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield togglePostDelete(uid, pid, true);
-        });
-    };
-    Posts.tools.restore = function (uid, pid) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield togglePostDelete(uid, pid, false);
-        });
-    };
     function togglePostDelete(uid, pid, isDelete) {
         return __awaiter(this, void 0, void 0, function* () {
             const [postData, canDelete] = yield Promise.all([
@@ -42,7 +37,9 @@ module.exports = function (Posts) {
             }
             let post;
             if (isDelete) {
-                require('./cache').del(pid);
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                cache.del(pid);
                 post = yield Posts.delete(pid, uid);
             }
             else {
@@ -52,41 +49,51 @@ module.exports = function (Posts) {
             return post;
         });
     }
-    ;
+    Posts.tools.delete = function (uid, pid) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield togglePostDelete(uid, pid, true);
+        });
+    };
+    Posts.tools.restore = function (uid, pid) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield togglePostDelete(uid, pid, false);
+        });
+    };
     Posts.tools.setPinExpiry = (pid, expiry, uid) => __awaiter(this, void 0, void 0, function* () {
-        if (isNaN(parseInt(expiry, 10)) || expiry <= Date.now()) {
-            throw new Error('[[error:invalid-data]]');
+        if (typeof expiry === 'string') {
+            const expiryStr = expiry;
+            if (isNaN(parseInt(expiryStr, 10))) {
+                throw new Error('[[error:invalid-data]]');
+            }
+        }
+        else {
+            const expiryNum = expiry;
+            if (expiryNum <= Date.now()) {
+                throw new Error('[[error:invalid-data]]');
+            }
         }
         const postData = yield Posts.getPostFields(pid, ['pid', 'uid', 'cid']);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const isAdminOrMod = yield privileges.categories.isAdminOrMod(postData.cid, uid);
         if (!isAdminOrMod) {
             throw new Error('[[error:no-privileges]]');
         }
         yield Posts.setPostFieldWithValue(pid, 'pinExpiry', expiry);
-        plugins.hooks.fire('action:topic.setPinExpiry', { post: _.clone(postData), uid: uid });
-    });
-    Posts.tools.checkPinExpiry = (pids) => __awaiter(this, void 0, void 0, function* () {
-        const expiry = (yield Posts.getPostsFields(pids, ['pinExpiry'])).map(obj => obj.pinExpiry);
-        const now = Date.now();
-        pids = yield Promise.all(pids.map((pid, idx) => __awaiter(this, void 0, void 0, function* () {
-            if (expiry[idx] && parseInt(expiry[idx], 10) <= now) {
-                yield togglePin(pid, 'system', false);
-                return null;
-            }
-            return pid;
-        })));
-        return pids.filter(Boolean);
+        yield plugins.hooks.fire('action:post.setPinExpiry', { post: lodash_1.default.clone(postData), uid: uid });
     });
     function togglePin(pid, uid, pin) {
         return __awaiter(this, void 0, void 0, function* () {
             const postData = yield Posts.getPostData(pid);
             if (!postData) {
-                throw new Error('[[error:no-topic]]');
+                throw new Error('[[error:no-post]]');
             }
             if (postData.scheduled) {
                 throw new Error('[[error:cant-pin-scheduled]]');
             }
-            const canPin = yield privileges.global.can('pin:topics', uid);
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const canPin = yield privileges.global.can('pin:posts', uid);
             if (uid !== 'system' && !canPin) {
                 throw new Error('[[error:no-privileges]]');
             }
@@ -95,7 +102,11 @@ module.exports = function (Posts) {
                 // Posts.events.log(pid, { type: pin ? 'pin' : 'unpin', uid }),
             ];
             if (pin) {
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-argument
                 promises.push(db.sortedSetAdd(`cid:${postData.cid}:pids:pinned`, Date.now(), pid));
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-argument
                 promises.push(db.sortedSetsRemove([
                     `cid:${postData.cid}:pids`,
                     `cid:${postData.cid}:pids:posts`,
@@ -104,8 +115,12 @@ module.exports = function (Posts) {
                 ], pid));
             }
             else {
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-call
                 promises.push(db.sortedSetRemove(`cid:${postData.cid}:tids:pinned`, pid));
-                promises.push(Posts.deleteTopicField(pid, 'pinExpiry'));
+                promises.push(Posts.deletePostField(pid, 'pinExpiry'));
+                // The next line calls a function in a module that has not been updated to TS yet
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
                 promises.push(db.sortedSetAddBulk([
                     [`cid:${postData.cid}:pids`, postData.lastposttime, pid],
                     [`cid:${postData.cid}:pids:posts`, postData.postcount, pid],
@@ -119,8 +134,20 @@ module.exports = function (Posts) {
             postData.isPinned = pin; // deprecate in v2.0
             postData.pinned = pin;
             postData.events = results[1];
-            plugins.hooks.fire('action:topic.pin', { topic: _.clone(postData), uid });
+            yield plugins.hooks.fire('action:post.pin', { post: lodash_1.default.clone(postData), uid });
             return postData;
         });
     }
+    Posts.tools.checkPinExpiry = (pids) => __awaiter(this, void 0, void 0, function* () {
+        const expiry = (yield Posts.getPostsFields(pids, ['pinExpiry'])).map(obj => obj.pinExpiry);
+        const now = Date.now();
+        pids = yield Promise.all(pids.map((pid, idx) => __awaiter(this, void 0, void 0, function* () {
+            if (expiry[idx] && parseInt(expiry[idx], 10) <= now) {
+                yield togglePin(pid, 'system', false);
+                return null;
+            }
+            return pid;
+        })));
+        return pids.filter(Boolean);
+    });
 };

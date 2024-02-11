@@ -63,7 +63,7 @@ export interface PostsFunctions {
     setPostField: (pid: number, field: string, value: boolean) => Promise<void>;
     setPostFieldWithValue: (pid: number, field: string, value: string | number) => Promise<void>;
     setPostFields: (pid: number, data: object) => Promise<void>;
-    deleteTopicField: (pid: number, field: string) => Promise<void>;
+    deletePostField: (pid: number, field: string) => Promise<void>;
     tools: {
         delete: (uid: number, pid: number) => Promise<PostObjectNew>,
         restore: (uid: number, pid: number) => Promise<PostObjectNew>,
@@ -185,8 +185,9 @@ postData: PostObjectNew | null) => void): Promise<PostObjectNew | null> {
         await plugins.hooks.fire('action:post.setFields', { data: { ...data, pid } });
     };
 
-    Posts.deleteTopicField = async function (pid: number, field: string) {
-        await db.deleteObjectField(`post:${pid}`, field)
+    Posts.deletePostField = async function (pid: number, field: string) {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        await db.deleteObjectField(`post:${pid}`, field);
     };
-
 }

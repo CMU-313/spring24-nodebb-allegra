@@ -139,8 +139,10 @@ function default_1(Posts) {
             yield plugins_1.default.hooks.fire('action:post.setFields', { data: Object.assign(Object.assign({}, data), { pid }) });
         });
     };
-    Posts.deleteTopicField = function (pid, field) {
+    Posts.deletePostField = function (pid, field) {
         return __awaiter(this, void 0, void 0, function* () {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             yield database_1.default.deleteObjectField(`post:${pid}`, field);
         });
     };

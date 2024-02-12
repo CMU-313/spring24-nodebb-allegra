@@ -10,6 +10,7 @@ const plugins = require('../plugins');
 const privileges = require('../privileges');
 const utils = require('../utils');
 
+const assert = require('assert');
 
 module.exports = function (Topics) {
     const topicTools = {};
@@ -118,7 +119,19 @@ module.exports = function (Topics) {
         return await togglePin(tid, uid, false);
     };
 
+    /**
+     * @param {string} tid - Topic ID
+     * @param {number} expiry - Expiry date
+     * @param {number} uid - User ID
+     * @returns {Promise<void>}
+     */
+
     topicTools.setPinExpiry = async (tid, expiry, uid) => {
+
+        assert(typeof tid === 'string', 'tid must be a string');
+        assert(typeof expiry === 'number', 'expiry must be a number');
+        assert(typeof uid === 'number', 'uid must be a number');
+
         if (isNaN(parseInt(expiry, 10)) || expiry <= Date.now()) {
             throw new Error('[[error:invalid-data]]');
         }
@@ -149,7 +162,19 @@ module.exports = function (Topics) {
         return tids.filter(Boolean);
     };
 
+    /**
+     * @param {string} tid - Topic ID
+     * @param {number} uid - User ID
+     * @param {boolean} pin - Whether to pin or unpin the topic
+     * @returns {Promise<void>}
+     */
+
     async function togglePin(tid, uid, pin) {
+
+        assert(typeof tid === 'string', 'tid must be a string');
+        assert(typeof uid === 'number', 'uid must be a number');
+        assert(typeof pin === 'boolean', 'pin must be a boolean');
+
         const topicData = await Topics.getTopicData(tid);
         if (!topicData) {
             throw new Error('[[error:no-topic]]');

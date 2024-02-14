@@ -806,6 +806,7 @@ describe('Categories', () => {
                     'groups:view:users': true,
                     'groups:view:users:info': false,
                     'groups:view:tags': true,
+                    'groups:mark:duplicate': false,
                     'groups:view:groups': true,
                     'groups:upload:post:image': true,
                     'groups:upload:post:file': false,

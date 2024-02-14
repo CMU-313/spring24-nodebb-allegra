@@ -75,6 +75,7 @@ describe('Middlewares', () => {
                 assert(resMock.locals.privileges);
                 assert.deepStrictEqual(resMock.locals.privileges, {
                     chat: true,
+                    'mark:duplicate': true,
                     'upload:post:image': true,
                     'upload:post:file': true,
                     signature: true,

@@ -125,6 +125,10 @@ module.exports = function (Topics) {
 
         const topicData = await Topics.getTopicFields(tid, ['tid', 'uid', 'cid']);
         const isAdminOrMod = await privileges.categories.isAdminOrMod(topicData.cid, uid);
+        const markDup = await privileges.global.can('mark:duplicate', uid);
+        if (!isAdminOrMod) {
+            throw new Error('[[error:no-privileges]]');
+        }
         if (!isAdminOrMod) {
             throw new Error('[[error:no-privileges]]');
         }

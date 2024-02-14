@@ -20,6 +20,7 @@ const _privilegeMap = new Map([
     ['chat', { label: '[[admin/manage/privileges:chat]]' }],
     ['upload:post:image', { label: '[[admin/manage/privileges:upload-images]]' }],
     ['upload:post:file', { label: '[[admin/manage/privileges:upload-files]]' }],
+    ['mark:duplicate', { label: '[[admin/manage/privileges:mark-duplicate]]' }],
     ['signature', { label: '[[admin/manage/privileges:signature]]' }],
     ['invite', { label: '[[admin/manage/privileges:invite]]' }],
     ['group:create', { label: '[[admin/manage/privileges:allow-group-creation]]' }],

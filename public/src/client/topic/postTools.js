@@ -288,6 +288,17 @@ define('forum/topic/postTools', [
         });
     }
 
+    
+    async function hideWhenMarked(post: Post): void {
+      if (post.isDuplicate) {
+         post.visible = false;
+	 console.log('Post with ID: ${post.id}$ is now hiddne as its marked duplicate")
+      }
+      else {
+       console.log('Post with ID: ${post.id} is not marked as duplicate. "){   
+   }
+}
+ 
     async function onQuoteClicked(button, tid) {
         const selectedNode = await getSelectedNode();
 

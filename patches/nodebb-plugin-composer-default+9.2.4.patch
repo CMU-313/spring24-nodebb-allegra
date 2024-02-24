@@ -1,0 +1,26 @@
+diff --git a/node_modules/nodebb-plugin-composer-default/static/less/composer.less b/node_modules/nodebb-plugin-composer-default/static/less/composer.less
+index e9a8ca6..0d830bb 100644
+--- a/node_modules/nodebb-plugin-composer-default/static/less/composer.less
++++ b/node_modules/nodebb-plugin-composer-default/static/less/composer.less
+@@ -571,3 +571,4 @@
+ @import './zen-mode.less';
+ @import './page-compose.less';
+ @import './textcomplete.less';
++
+diff --git a/node_modules/nodebb-plugin-composer-default/static/templates/composer.tpl b/node_modules/nodebb-plugin-composer-default/static/templates/composer.tpl
+index cf9de24..984989e 100644
+--- a/node_modules/nodebb-plugin-composer-default/static/templates/composer.tpl
++++ b/node_modules/nodebb-plugin-composer-default/static/templates/composer.tpl
+@@ -91,6 +91,12 @@
+ 						<input type="file" id="files" name="files[]" multiple class="gte-ie9 hide"/>
+ 					</form>
+ 				</ul>
++        <div>
++          <input type="checkbox" value="" id="anonymous">
++          <label for="anonymous">
++            Anonymous
++          </label>
++        </div>
+ 			</div>
+ 		</div>
+ 

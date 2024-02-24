@@ -18,4 +18,6 @@ export type PostObject = {
   category: CategoryObject;
   isMainPost: boolean;
   replies: number;
+  pinned: boolean;
+  
 };

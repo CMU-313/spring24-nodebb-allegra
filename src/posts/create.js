@@ -13,10 +13,9 @@ const utils = require('../utils');
 
 module.exports = function (Posts) {
     Posts.create = async function (data) {
-        // This is an internal method, consider using Topics.reply instead
-        const { uid } = data;
-        const { tid } = data;
-        const content = data.content.toString();
+        const { uid, tid, isAnonymous } = data; 
+        // Here, we reverse the logic: append the text if the post is NOT anonymous
+        const content = isAnonymous ? data.content.toString() : data.content.toString() + " [This post was made anonymously]";
         const timestamp = data.timestamp || Date.now();
         const isMain = data.isMain || false;
 
@@ -31,10 +30,11 @@ module.exports = function (Posts) {
         const pid = await db.incrObjectField('global', 'nextPid');
         let postData = {
             pid: pid,
-            uid: uid,
+            uid: uid, // Keep the actual UID since now we are not specifically handling anonymous logic here
             tid: tid,
             content: content,
             timestamp: timestamp,
+            isAnonymous: !!isAnonymous, // Still store the actual state of isAnonymous
         };
 
         if (data.toPid) {
@@ -68,6 +68,7 @@ module.exports = function (Posts) {
         result = await plugins.hooks.fire('filter:post.get', { post: postData, uid: data.uid });
         result.post.isMain = isMain;
         plugins.hooks.fire('action:post.save', { post: _.clone(result.post) });
+
         return result.post;
     };
 

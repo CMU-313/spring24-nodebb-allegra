@@ -2,6 +2,8 @@
 
 const _ = require('lodash');
 
+const assert = require('assert');
+
 const db = require('../database');
 const topics = require('.');
 const categories = require('../categories');
@@ -9,8 +11,6 @@ const user = require('../user');
 const plugins = require('../plugins');
 const privileges = require('../privileges');
 const utils = require('../utils');
-
-const assert = require('assert');
 
 module.exports = function (Topics) {
     const topicTools = {};
@@ -127,7 +127,6 @@ module.exports = function (Topics) {
      */
 
     topicTools.setPinExpiry = async (tid, expiry, uid) => {
-
         assert(typeof tid === 'string', 'tid must be a string');
         assert(typeof expiry === 'number', 'expiry must be a number');
         assert(typeof uid === 'number', 'uid must be a number');
@@ -170,7 +169,6 @@ module.exports = function (Topics) {
      */
 
     async function togglePin(tid, uid, pin) {
-
         assert(typeof tid === 'string', 'tid must be a string');
         assert(typeof uid === 'number', 'uid must be a number');
         assert(typeof pin === 'boolean', 'pin must be a boolean');

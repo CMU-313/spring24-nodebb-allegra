@@ -168,6 +168,10 @@ define('forum/topic/postTools', [
             }
         });
 
+        postContainer.on('click', '[component="post/pin"]', function () {
+            
+        });
+
         if (config.enablePostHistory && ajaxify.data.privileges['posts:history']) {
             postContainer.on('click', '[component="post/view-history"], [component="post/edit-indicator"]', function () {
                 const btn = $(this);

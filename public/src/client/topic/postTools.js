@@ -413,6 +413,25 @@ define('forum/topic/postTools', [
         postAction(action, pid);
     }
 
+    function togglePostPin(pid, isPinned, postPinDuration) {
+        if (isPinned) {
+            postAction('unpin', pid);
+        } else {
+            require(['composer'], function (composer) {
+                composer.newTopic({
+                    cid: ajaxify.data.cid,
+                    title: ajaxify.data.title,
+                    body: '',
+                    tags: [],
+                    isPinning: true,
+                    pinDuration: postPinDuration,
+                    pinPid: pid,
+                });
+            });
+            postAction('pin', pid);
+        }
+    }
+
     function purgePost(button) {
         postAction('purge', getData(button, 'data-pid'));
     }

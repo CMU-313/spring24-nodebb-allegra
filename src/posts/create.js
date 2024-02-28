@@ -34,7 +34,7 @@ module.exports = function (Posts) {
         const pid = await db.incrObjectField("global", "nextPid");
         let postData = {
             pid: pid,
-            uid: !anonymous ? uid : null, // Keep the actual UID since now we are not specifically handling anonymous logic here
+            uid: uid, // Keep the actual UID since now we are not specifically handling anonymous logic here
             tid: tid,
             content: content,
             timestamp: timestamp,

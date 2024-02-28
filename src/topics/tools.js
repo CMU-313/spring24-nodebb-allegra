@@ -120,14 +120,14 @@ module.exports = function (Topics) {
     };
 
     /**
-     * @param {string} tid - Topic ID
+     * @param {string | number} tid - Topic ID
      * @param {number} expiry - Expiry date
      * @param {number} uid - User ID
      * @returns {Promise<void>}
      */
 
     topicTools.setPinExpiry = async (tid, expiry, uid) => {
-        assert(typeof tid === 'string', 'tid must be a string');
+        assert(typeof tid === 'string' || typeof tid === 'number', 'tid must be a string or a number');
         assert(typeof expiry === 'number', 'expiry must be a number');
         assert(typeof uid === 'number', 'uid must be a number');
 
@@ -162,14 +162,14 @@ module.exports = function (Topics) {
     };
 
     /**
-     * @param {string} tid - Topic ID
+     * @param {string | number} tid - Topic ID
      * @param {number} uid - User ID
      * @param {boolean} pin - Whether to pin or unpin the topic
      * @returns {Promise<void>}
      */
 
     async function togglePin(tid, uid, pin) {
-        assert(typeof tid === 'string', 'tid must be a string');
+        assert(typeof tid === 'string' || typeof tid === 'number', 'tid must be a string or a number');
         assert(typeof uid === 'number', 'uid must be a number');
         assert(typeof pin === 'boolean', 'pin must be a boolean');
 

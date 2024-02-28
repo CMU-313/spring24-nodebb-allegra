@@ -169,7 +169,10 @@ define('forum/topic/postTools', [
         });
 
         postContainer.on('click', '[component="post/pin"]', function () {
-            
+            const pid = getData($(this), 'data-pid');
+            const postPinDuration = parseInt(ajaxify.data.postPinDuration, 10);
+            const isPinned = $(this).hasClass('pinned');
+            togglePostPin(pid, isPinned, postPinDuration);
         });
 
         if (config.enablePostHistory && ajaxify.data.privileges['posts:history']) {

@@ -41,4 +41,23 @@ module.exports = function (Posts) {
         }
         return post;
     }
+
+    async function togglePostPin(pid, isPinned, postPinDuration){
+        const post = await Posts.getPostData(pid);
+        if (!post) {
+            throw new Error('[[error:no-post]]');
+        }
+
+        if (isPinned && post.pinned) {
+            throw new Error('[[error:post-already-pinned]]');
+        } else if (!isPinned && !post.pinned) {
+            throw new Error('[[error:post-already-unpinned]]');
+        }
+
+        if (isPinned) {
+            return await Posts.pin(pid, postPinDuration);
+        } else {
+            return await Posts.unpin(pid);
+        }
+    }
 };

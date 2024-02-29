@@ -13,7 +13,7 @@ const utils = require("../utils");
 
 module.exports = function (Posts) {
     Posts.create = async function (data) {
-        const { uid, tid, isAnonymous: anonymous } = data;
+        const { uid, tid, anonymous } = data;
         // Here, we reverse the logic: append the text if the post is NOT anonymous
         const content = anonymous
             ? data.content.toString()

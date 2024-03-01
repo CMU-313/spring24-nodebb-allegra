@@ -31,6 +31,7 @@ describe('Post\'s', () => {
     let postData;
     let topicData;
     let cid;
+    let anonPostData;
 
     before((done) => {
         async.series({
@@ -64,6 +65,7 @@ describe('Post\'s', () => {
                 cid: results.category.cid,
                 title: 'Test Topic Title',
                 content: 'The content of test topic',
+                anonymouse: false,
             }, (err, data) => {
                 if (err) {
                     return done(err);
@@ -72,6 +74,22 @@ describe('Post\'s', () => {
                 topicData = data.topicData;
 
                 groups.join('Global Moderators', globalModUid, done);
+            });
+            topics.createTopic({
+                uid: results.userIdentifier, // Unique identifier of the user creating the post
+                cid: results.categoryDetails.cid, // Category identifier where the topic is to be posted
+                title: 'Example Topic Title', // Title of the new forum topic
+                content: 'This is the content of the example topic', // Body content of the topic
+                anonymous: true, // Flag indicating if the post should be anonymous
+            }, (error, response) => {
+                // Callback function handling the response after attempting to post the new topic
+                if (error) {
+                    // If there is an error in creating the topic, pass the error to the callback function
+                    return done(error);
+                }
+                // On successful topic creation, store the post and topic data for further use
+                anonymousPostDetails = response.postData; // Store data of the anonymously created post
+                detailedTopicData = response.topicData; // Store detailed information of the created topic
             });
         });
     });
@@ -735,7 +753,48 @@ describe('Post\'s', () => {
                 done();
             });
         });
+
+        it('verifies non-anonymous post retains anonymous attribute', (completion) => {
+            // Retrieve a summary for a specific post identified by its post ID.
+            posts.fetchSummaryByPostIds([normalPostDetails.pid], 0, {}, (error, results) => {
+                // First, check if there were no errors in fetching the post summary.
+                assert.ifError(error);
+                // Ensure the post summary includes the 'anonymous' attribute.
+                assert(results[0].hasOwnProperty('anonymous'));
+                // Check if the 'anonymous' attribute is correctly set for non-anonymous posts.
+                if (typeof results[0].anonymous === 'string') {
+                    // If 'anonymous' is a string, it should be 'false' for non-anonymous posts.
+                    assert.equal(results[0].anonymous, 'false');
+                } else {
+                    // If 'anonymous' is not a string, it should be the boolean false.
+                    assert.equal(results[0].anonymous, false);
+                }
+                // Signal completion of the test case.
+                completion();
+            });
+        });
+        
+        it('verifies anonymous post retains anonymous attribute', (completion) => {
+            // Fetch post summary information for a post marked as anonymous.
+            posts.fetchSummaryByPostIds([anonymousPostDetails.pid], 0, {}, (error, results) => {
+                // Ensure there is no error in retrieving the post data.
+                assert.ifError(error);
+                // Confirm that the post data includes the 'anonymous' field.
+                assert(results[0].hasOwnProperty('anonymous'));
+                // Validate whether the 'anonymous' field correctly reflects post anonymity.
+                if (typeof results[0].anonymous === 'string') {
+                    // For anonymous posts, if 'anonymous' is a string, it should be 'true'.
+                    assert.equal(results[0].anonymous, 'true');
+                } else {
+                    // If 'anonymous' is not a string, it should be the boolean true for anonymous posts.
+                    assert.equal(results[0].anonymous, true);
+                }
+                // Complete the test case.
+                completion();
+            });
+        });
     });
+
 
     it('should get recent poster uids', (done) => {
         topics.reply({

@@ -2,6 +2,8 @@
 
 const _ = require('lodash');
 
+const assert = require('assert');
+
 const db = require('../database');
 const topics = require('.');
 const categories = require('../categories');
@@ -9,7 +11,6 @@ const user = require('../user');
 const plugins = require('../plugins');
 const privileges = require('../privileges');
 const utils = require('../utils');
-
 
 module.exports = function (Topics) {
     const topicTools = {};
@@ -118,14 +119,25 @@ module.exports = function (Topics) {
         return await togglePin(tid, uid, false);
     };
 
+    /**
+     * @param {string | number} tid - Topic ID
+     * @param {number} expiry - Expiry date
+     * @param {number} uid - User ID
+     * @returns {Promise<void>}
+     */
+
     topicTools.setPinExpiry = async (tid, expiry, uid) => {
+        assert(typeof tid === 'string' || typeof tid === 'number', 'tid must be a string or a number');
+        assert(typeof expiry === 'number', 'expiry must be a number');
+        assert(typeof uid === 'number', 'uid must be a number');
+
         if (isNaN(parseInt(expiry, 10)) || expiry <= Date.now()) {
             throw new Error('[[error:invalid-data]]');
         }
 
         const topicData = await Topics.getTopicFields(tid, ['tid', 'uid', 'cid']);
-        const isAdminOrMod = await privileges.categories.isAdminOrMod(topicData.cid, uid);
-        if (!isAdminOrMod) {
+        const canPin = await privileges.global.can('pin:topics', uid);
+        if (!canPin) {
             throw new Error('[[error:no-privileges]]');
         }
 
@@ -149,7 +161,18 @@ module.exports = function (Topics) {
         return tids.filter(Boolean);
     };
 
+    /**
+     * @param {string | number} tid - Topic ID
+     * @param {number} uid - User ID
+     * @param {boolean} pin - Whether to pin or unpin the topic
+     * @returns {Promise<void>}
+     */
+
     async function togglePin(tid, uid, pin) {
+        assert(typeof tid === 'string' || typeof tid === 'number', 'tid must be a string or a number');
+        assert(typeof uid === 'number', 'uid must be a number');
+        assert(typeof pin === 'boolean', 'pin must be a boolean');
+
         const topicData = await Topics.getTopicData(tid);
         if (!topicData) {
             throw new Error('[[error:no-topic]]');
@@ -159,7 +182,8 @@ module.exports = function (Topics) {
             throw new Error('[[error:cant-pin-scheduled]]');
         }
 
-        if (uid !== 'system' && !await privileges.topics.isAdminOrMod(tid, uid)) {
+        const canPin = await privileges.global.can('pin:topics', uid);
+        if (uid !== 'system' && !canPin) {
             throw new Error('[[error:no-privileges]]');
         }
 

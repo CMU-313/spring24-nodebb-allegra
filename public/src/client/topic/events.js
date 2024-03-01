@@ -37,12 +37,15 @@ define('forum/topic/events', [
         'event:post_deleted': togglePostDeleteState,
         'event:post_restored': togglePostDeleteState,
 
+
         'posts.bookmark': togglePostBookmark,
         'posts.unbookmark': togglePostBookmark,
 
         'posts.upvote': togglePostVote,
         'posts.downvote': togglePostVote,
         'posts.unvote': togglePostVote,
+        'posts.pin': setPinExpiry,
+        'posts.unpin': togglePostPin,
 
         'event:new_notification': onNewNotification,
         'event:new_post': posts.onNewPost,
@@ -221,6 +224,48 @@ define('forum/topic/events', [
         el.find('[component="post/bookmark/off"]').toggleClass('hidden', data.isBookmarked);
     }
 
+    function setPinExpiry(data) {
+        body = {};
+        app.parseAndTranslate('modals/set-pin-expiry', {}, function (html) {
+            const modal = bootbox.dialog({
+                title: '[[topic:thread_tools.pin]]',
+                message: html,
+                onEscape: true,
+                size: 'small',
+                buttons: {
+                    cancel: {
+                        label: '[[modules:bootbox.cancel]]',
+                        className: 'btn-link',
+                    },
+                    save: {
+                        label: '[[global:save]]',
+                        className: 'btn-primary',
+                        callback: function () {
+                            const expiryEl = modal.get(0).querySelector('#expiry');
+                            let expiry = expiryEl.value;
+
+                            // No expiry set
+                            if (expiry === '') {
+                                return onSuccess();
+                            }
+
+                            // Expiration date set
+                            expiry = new Date(expiry);
+
+                            if (expiry && expiry.getTime() > Date.now()) {
+                                body.expiry = expiry.getTime();
+                                onSuccess();
+                            } else {
+                                alerts.error('[[error:invalid-date]]');
+                            }
+                        },
+                    },
+                },
+            });
+        });
+        togglePostPin(data);
+    }
+
     function togglePostVote(data) {
         const post = $('[data-pid="' + data.post.pid + '"]');
         post.find('[component="post/upvote"]').filter(function (index, el) {
@@ -229,6 +274,27 @@ define('forum/topic/events', [
         post.find('[component="post/downvote"]').filter(function (index, el) {
             return parseInt($(el).closest('[data-pid]').attr('data-pid'), 10) === parseInt(data.post.pid, 10);
         }).toggleClass('downvoted', data.downvote);
+    }
+
+    function togglePostPin(data) {
+        const post = $('[data-pid="' + data.post.pid + '"]');
+        if (parseInt(data.pid, 10) !== parseInt(post.attr('data-pid'), 10)) {
+            return;
+        }
+
+        components.get('post/pin').toggleClass('hidden', data.pinned).parent().attr('hidden', data.pinned ? '' : null);
+        components.get('post/unpin').toggleClass('hidden', !data.pinned).parent().attr('hidden', !data.pinned ? '' : null);
+        
+        const icon = $('[component="post/labels"] [component="post/pinned"]');
+        icon.toggleClass('hidden', !data.pinned);
+        if (data.pinned) {
+            icon.translateAttr('title', (
+                data.pinExpiry && data.pinExpiryISO ?
+                    '[[post:pinned-with-expiry, ' + data.pinExpiryISO + ']]' :
+                    '[[post:pinned]]'
+            ));
+        }
+        ajaxify.data.pinned = data.pinned;
     }
 
     function onNewNotification(data) {

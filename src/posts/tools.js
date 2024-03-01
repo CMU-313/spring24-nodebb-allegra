@@ -67,7 +67,7 @@ module.exports = function (Posts) {
 
         let post;
         if (isPinned) {
-            post = await Posts.pin(pid, postPinDuration);
+            post = await Posts.pin(pid, postPinDuration, postData);
         } else {
             post = await Posts.unpin(pid);
         }

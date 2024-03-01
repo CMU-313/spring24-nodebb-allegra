@@ -28,5 +28,14 @@ This is in regards to posting anonymously.
 
 ## Testing
 
-To test this feature
+To test this feature, you should start off by trying to create a post in any of the categories.
+When the post composer shows up, there is an **Anonymous** button that you can check. When you check
+the button and make a post, your name shouldn't show up and instead a `Guest` icon will show up in
+your place.
 
+You should also test if a normal post that isn't _anonymous_ works. To do this, make a normal post
+without checking the **Anonymous** box. You should see your name now.
+
+If both conditions are true, then it works! This should work in any category that you make a post in.
+
+### Automated Tests

@@ -120,7 +120,36 @@ topicsController.get = async function getTopic(req, res, next) {
         res.locals.linkTags.push(rel);
     });
 
-    res.render('topic', topicData);
+    //Will mark posts that are needed to be transformed to anonymous
+    const updatedPosts = topicData.posts.map(singlePost => {
+        // This is the default user object for anonymous posts
+        const anonymousUser = {
+            uid: 0,
+            username: 'anonymous',
+            userslug: 'anonymous',
+            picture: null,
+            status: 'online',
+            displayname: 'Anonymous User',
+            'icon:text': 'A',
+            'icon:bgColor': '#3f51b5',
+        };
+
+        // Update post with user details or anonymize
+        return {
+            ...singlePost,
+            uid: singlePost.anonymous ? 0 : singlePost.uid,
+            user: singlePost.anonymous ? anonymousUser : singlePost.user,
+        };
+    });
+
+    // Construct new topic data with updated posts
+    const updatedTopicData = {
+        ...topicData,
+        posts: updatedPosts,
+    };
+
+    // Send the updated topic data to the client
+    res.render('topic', updatedTopicData);
 };
 
 function generateQueryString(query) {

@@ -15,11 +15,7 @@ module.exports = function (Posts) {
     Posts.create = async function (data) {
         const { uid, tid, anonymous } = data;
         // Here, we reverse the logic: append the text if the post is NOT anonymous
-        const content = anonymous
-            ? data.content.toString()
-            : data.content.toString() +
-              " [This post was made anonymously]" +
-              "${data}";
+        const content = data.content.toString();
         const timestamp = data.timestamp || Date.now();
         const isMain = data.isMain || false;
 
@@ -34,7 +30,7 @@ module.exports = function (Posts) {
         const pid = await db.incrObjectField("global", "nextPid");
         let postData = {
             pid: pid,
-            uid: uid, // Keep the actual UID since now we are not specifically handling anonymous logic here
+            uid: anonymous ? 0 : uid, // Keep the actual UID since now we are not specifically handling anonymous logic here
             tid: tid,
             content: content,
             timestamp: timestamp,

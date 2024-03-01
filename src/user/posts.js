@@ -1,16 +1,16 @@
-"use strict";
+'use strict';
 
-const db = require("../database");
-const meta = require("../meta");
-const privileges = require("../privileges");
+const db = require('../database');
+const meta = require('../meta');
+const privileges = require('../privileges');
 
 module.exports = function (User) {
     User.isReadyToPost = async function (uid, cid) {
-        await isReady(uid, cid, "lastposttime");
+        await isReady(uid, cid, 'lastposttime');
     };
 
     User.isReadyToQueue = async function (uid, cid) {
-        await isReady(uid, cid, "lastqueuetime");
+        await isReady(uid, cid, 'lastqueuetime');
     };
 
     async function isReady(uid, cid, field) {
@@ -20,7 +20,7 @@ module.exports = function (User) {
         const [userData, isAdminOrMod] = await Promise.all([
             User.getUserFields(
                 uid,
-                ["uid", "mutedUntil", "joindate", "email", "reputation"].concat(
+                ['uid', 'mutedUntil', 'joindate', 'email', 'reputation'].concat(
                     [field],
                 ),
             ),
@@ -28,7 +28,7 @@ module.exports = function (User) {
         ]);
 
         if (!userData.uid) {
-            throw new Error("[[error:no-user]]");
+            throw new Error('[[error:no-user]]');
         }
 
         if (isAdminOrMod) {
@@ -78,7 +78,7 @@ module.exports = function (User) {
 
         await Promise.all([
             User.addPostIdToUser(postData),
-            User.setUserField(postData.uid, "lastposttime", lastposttime),
+            User.setUserField(postData.uid, 'lastposttime', lastposttime),
             User.updateLastOnlineTime(postData.uid),
         ]);
     };
@@ -110,7 +110,7 @@ module.exports = function (User) {
                         { postcount: counts[index] },
                     ]),
                 ),
-                db.sortedSetAdd("users:postcount", counts, uids),
+                db.sortedSetAdd('users:postcount', counts, uids),
             ]);
         }
     };
@@ -118,8 +118,8 @@ module.exports = function (User) {
     User.incrementUserPostCountBy = async function (uid, value) {
         return await incrementUserFieldAndSetBy(
             uid,
-            "postcount",
-            "users:postcount",
+            'postcount',
+            'users:postcount',
             value,
         );
     };
@@ -127,8 +127,8 @@ module.exports = function (User) {
     User.incrementUserReputationBy = async function (uid, value) {
         return await incrementUserFieldAndSetBy(
             uid,
-            "reputation",
-            "users:reputation",
+            'reputation',
+            'users:reputation',
             value,
         );
     };
@@ -136,8 +136,8 @@ module.exports = function (User) {
     User.incrementUserFlagsBy = async function (uid, value) {
         return await incrementUserFieldAndSetBy(
             uid,
-            "flags",
-            "users:flags",
+            'flags',
+            'users:flags',
             value,
         );
     };

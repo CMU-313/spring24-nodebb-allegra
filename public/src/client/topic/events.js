@@ -44,8 +44,6 @@ define('forum/topic/events', [
         'posts.upvote': togglePostVote,
         'posts.downvote': togglePostVote,
         'posts.unvote': togglePostVote,
-        'posts.pin': togglePostPin,
-        'posts.unpin': togglePostPin,
 
         'event:new_notification': onNewNotification,
         'event:new_post': posts.onNewPost,

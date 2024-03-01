@@ -429,7 +429,7 @@ async function giveGlobalPrivileges() {
     ];
     await privileges.global.give(defaultPrivileges, 'registered-users');
     await privileges.global.give(defaultPrivileges.concat([
-        'groups:ban', 'groups:upload:post:file', 'groups:view:users:info',
+        'groups:ban', 'groups:upload:post:file', 'groups:view:users:info', 'groups:pin:topics',
     ]), 'Global Moderators');
     await privileges.global.give(['groups:view:users', 'groups:view:tags', 'groups:view:groups'], 'guests');
     await privileges.global.give(['groups:view:users', 'groups:view:tags', 'groups:view:groups'], 'spiders');

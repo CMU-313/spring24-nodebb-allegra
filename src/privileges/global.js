@@ -23,6 +23,7 @@ const _privilegeMap = new Map([
     ['signature', { label: '[[admin/manage/privileges:signature]]' }],
     ['invite', { label: '[[admin/manage/privileges:invite]]' }],
     ['group:create', { label: '[[admin/manage/privileges:allow-group-creation]]' }],
+    ['pin:topics', { label: '[[admin/manage/privileges:pin-topics]]' }],
     ['search:content', { label: '[[admin/manage/privileges:search-content]]' }],
     ['search:users', { label: '[[admin/manage/privileges:search-users]]' }],
     ['search:tags', { label: '[[admin/manage/privileges:search-tags]]' }],

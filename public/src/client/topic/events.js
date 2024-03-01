@@ -232,27 +232,6 @@ define('forum/topic/events', [
         }).toggleClass('downvoted', data.downvote);
     }
 
-    function togglePostPin(data) {
-        const post = $('[data-pid="' + data.post.pid + '"]');
-        if (parseInt(data.pid, 10) !== parseInt(post.attr('data-pid'), 10)) {
-            return;
-        }
-
-        components.get('post/pin').toggleClass('hidden', data.pinned).parent().attr('hidden', data.pinned ? '' : null);
-        components.get('post/unpin').toggleClass('hidden', !data.pinned).parent().attr('hidden', !data.pinned ? '' : null);
-
-        const icon = $('[component="post/labels"] [component="post/pinned"]');
-        icon.toggleClass('hidden', !data.pinned);
-        if (data.pinned) {
-            icon.translateAttr('title', (
-                data.pinExpiry && data.pinExpiryISO ?
-                    '[[post:pinned-with-expiry, ' + data.pinExpiryISO + ']]' :
-                    '[[post:pinned]]'
-            ));
-        }
-        ajaxify.data.pinned = data.pinned;
-    }
-
     function onNewNotification(data) {
         const tid = ajaxify.data.tid;
         if (data && data.tid && parseInt(data.tid, 10) === parseInt(tid, 10)) {

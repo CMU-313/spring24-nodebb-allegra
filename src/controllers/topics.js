@@ -160,7 +160,7 @@ topicsController.get = async function getTopic(req, res, next) {
     });
 
     // Will mark posts that are needed to be transformed to anonymous
-    const updatedPosts = topicData.posts.map((singlePost) => {
+    const updatedPosts = topicData.posts.map(singlePost => {
         // This is the default user object for anonymous posts
         const anonymousUser = {
             uid: 0,
@@ -213,7 +213,7 @@ function calculateStartStop(page, postIndex, settings) {
         );
     }
 
-    const start = (page - 1) * settings.postsPerPage + startSkip;
+    const start = ((page - 1) * settings.postsPerPage) + startSkip;
     const stop = start + settings.postsPerPage - 1;
     return { start: Math.max(0, start), stop: Math.max(0, stop) };
 }
@@ -275,9 +275,7 @@ async function addOldCategory(topicData, userPrivileges) {
 async function addTags(topicData, req, res) {
     const postIndex = parseInt(req.params.post_index, 10) || 0;
     const postAtIndex = topicData.posts.find(
-        (p) =>
-            parseInt(p.index, 10) === parseInt(Math.max(0, postIndex - 1), 10),
-    );
+        (p) => parseInt(p.index, 10) === parseInt(Math.max(0, postIndex - 1), 10),);
     let description = '';
     if (postAtIndex && postAtIndex.content) {
         description = utils.stripHTMLTags(

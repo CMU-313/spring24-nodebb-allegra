@@ -44,6 +44,7 @@ define('forum/topic/events', [
         'posts.upvote': togglePostVote,
         'posts.downvote': togglePostVote,
         'posts.unvote': togglePostVote,
+        'posts.pin': togglePostPinState,
 
         'event:new_notification': onNewNotification,
         'event:new_post': posts.onNewPost,
@@ -230,6 +231,27 @@ define('forum/topic/events', [
         post.find('[component="post/downvote"]').filter(function (index, el) {
             return parseInt($(el).closest('[data-pid]').attr('data-pid'), 10) === parseInt(data.post.pid, 10);
         }).toggleClass('downvoted', data.downvote);
+    }
+
+    function togglePostPinState(data) {
+        const post = $('[data-pid="' + data.post.pid + '"]');
+        if (parseInt(data.pid, 10) !== parseInt(post.attr('data-pid'), 10)) {
+            return;
+        }
+
+        components.get('post/pin').toggleClass('hidden', data.pinned).parent().attr('hidden', data.pinned ? '' : null);
+        components.get('post/unpin').toggleClass('hidden', !data.pinned).parent().attr('hidden', !data.pinned ? '' : null);
+
+        const icon = $('[component="post/labels"] [component="post/pinned"]');
+        icon.toggleClass('hidden', !data.pinned);
+        if (data.pinned) {
+            icon.translateAttr('title', (
+                data.pinExpiry && data.pinExpiryISO ?
+                    '[[post:pinned-with-expiry, ' + data.pinExpiryISO + ']]' :
+                    '[[post:pinned]]'
+            ));
+        }
+        ajaxify.data.pinned = data.pinned;
     }
 
     function onNewNotification(data) {

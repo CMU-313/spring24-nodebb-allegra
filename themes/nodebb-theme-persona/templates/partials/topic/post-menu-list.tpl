@@ -10,6 +10,11 @@
         <div class="inline menu-icon"><i class="fa fa-fw fa-trash-o"></i></div> <span>[[topic:delete]]</span>
     </a>
 </li>
+<li <!-- IF posts.deleted -->hidden<!-- ENDIF posts.deleted -->>
+    <a component="post/pin" role="menuitem" tabindex="-1" href="#" class="<!-- IF posts.deleted -->hidden<!-- ENDIF posts.deleted -->">
+        <div class="inline menu-icon"><i class="fa fa-fw fa-thumb-tack"></i></div> <span>[[topic:pin-comment]]</span>
+    </a>
+</li>
 <li <!-- IF !posts.deleted -->hidden<!-- ENDIF !posts.deleted -->>
     <a component="post/restore" role="menuitem" tabindex="-1" href="#" class="<!-- IF !posts.deleted -->hidden<!-- ENDIF !posts.deleted -->">
         <div class="inline menu-icon"><i class="fa fa-fw fa-history"></i></div> <span>[[topic:restore]]</span>

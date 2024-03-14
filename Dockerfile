@@ -11,7 +11,7 @@ COPY --chown=node:node install/package.json /usr/src/app/package.json
 
 USER node
 
-RUN npm install --only=prod && \
+RUN npm install && \
     npm cache clean --force
 
 COPY --chown=node:node . /usr/src/app
@@ -23,3 +23,4 @@ ENV NODE_ENV=production \
 EXPOSE 4567
 
 CMD test -n "${SETUP}" && ./nodebb setup || node ./nodebb build; node ./nodebb start
+

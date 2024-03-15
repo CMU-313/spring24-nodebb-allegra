@@ -65,7 +65,7 @@ describe('Post\'s', () => {
                 cid: results.category.cid,
                 title: 'Test Topic Title',
                 content: 'The content of test topic',
-                anonymouse: false,
+                anonymous: false,
             }, (err, data) => {
                 if (err) {
                     return done(err);

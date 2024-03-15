@@ -15,7 +15,9 @@
     "test": "npx tsc && nyc --reporter=html --reporter=text-summary mocha",
     "coverage": "nyc report --reporter=text-lcov > ./coverage/lcov.info",
     "coveralls": "nyc report --reporter=text-lcov | coveralls && rm -r coverage",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "remove-flow-types": "flow-remove-types src/ -d dist/",
+    "flow": "flow"
   },
   "nyc": {
     "exclude": [
@@ -163,6 +165,8 @@
     "eslint": "^8.31.0",
     "eslint-config-nodebb": "0.2.1",
     "eslint-plugin-import": "2.26.0",
+    "flow-bin": "^0.231.0",
+    "flow-remove-types": "^2.231.0",
     "grunt": "1.5.3",
     "grunt-contrib-watch": "1.1.0",
     "husky": "8.0.2",

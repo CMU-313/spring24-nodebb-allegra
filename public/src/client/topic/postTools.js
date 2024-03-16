@@ -168,6 +168,13 @@ define('forum/topic/postTools', [
             }
         });
 
+        postContainer.on('click', '[component="post/pin"]', function () {
+            const pid = getData($(this), 'data-pid');
+            const postPinDuration = parseInt(ajaxify.data.postPinDuration, 10);
+            const isPinned = $(this).hasClass('pinned');
+            togglePostPin(pid, isPinned, postPinDuration);
+        });
+
         if (config.enablePostHistory && ajaxify.data.privileges['posts:history']) {
             postContainer.on('click', '[component="post/view-history"], [component="post/edit-indicator"]', function () {
                 const btn = $(this);
@@ -404,6 +411,25 @@ define('forum/topic/postTools', [
         const action = !postEl.hasClass('deleted') ? 'delete' : 'restore';
 
         postAction(action, pid);
+    }
+
+    function togglePostPin(pid, isPinned, postPinDuration) {
+        if (isPinned) {
+            postAction('unpin', pid);
+        } else {
+            require(['composer'], function (composer) {
+                composer.newTopic({
+                    cid: ajaxify.data.cid,
+                    title: ajaxify.data.title,
+                    body: '',
+                    tags: [],
+                    isPinning: true,
+                    pinDuration: postPinDuration,
+                    pinPid: pid,
+                });
+            });
+            postAction('pin', pid);
+        }
     }
 
     function purgePost(button) {

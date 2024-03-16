@@ -33,6 +33,7 @@ module.exports = {
             'groups:chat',
             'groups:upload:post:image',
             'groups:upload:post:file',
+            'groups:pin:topics',
             'groups:signature',
             'groups:ban',
             'groups:search:content',

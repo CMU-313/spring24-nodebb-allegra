@@ -77,6 +77,7 @@ describe('Middlewares', () => {
                     chat: true,
                     'upload:post:image': true,
                     'upload:post:file': true,
+                    'pin:topics': true,
                     signature: true,
                     invite: true,
                     'group:create': true,

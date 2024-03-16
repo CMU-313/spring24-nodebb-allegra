@@ -246,7 +246,7 @@ describe('Topic\'s', () => {
     });
 
     describe ('Iroh Testing', () => {
-        it('should console.log post values', async () => {
+        it('Iroh Testing', async (done) => {
             let code = `
                 topics.post({
                 uid: topic.userId,
@@ -265,7 +265,7 @@ describe('Topic\'s', () => {
                 console.log("Function name: ", e.name);
               });
             eval(stage.script);
-        })
+        });
     })
 
     describe('.reply', () => {

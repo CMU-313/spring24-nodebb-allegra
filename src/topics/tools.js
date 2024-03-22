@@ -3,6 +3,7 @@
 const _ = require('lodash');
 
 const assert = require('assert');
+const Iroh = require('iroh');
 
 const db = require('../database');
 const topics = require('.');
@@ -172,7 +173,6 @@ module.exports = function (Topics) {
         assert(typeof tid === 'string' || typeof tid === 'number', 'tid must be a string or a number');
         assert(typeof uid === 'number', 'uid must be a number');
         assert(typeof pin === 'boolean', 'pin must be a boolean');
-
         const topicData = await Topics.getTopicData(tid);
         if (!topicData) {
             throw new Error('[[error:no-topic]]');
@@ -183,6 +183,20 @@ module.exports = function (Topics) {
         }
 
         const canPin = await privileges.global.can('pin:topics', uid);
+        // console.log('starting iroh in src/topics/tools.js');
+        // const code = "const canPin = await privileges.global.can('pin:topics', uid)";
+        // const stage = new Iroh.Stage(code);
+        // const listener = stage.addListener(Iroh.VAR);
+        // listener.on('before', (e) => {
+        //     console.log('before:', e.name, '=>', e.value);
+        // });
+        // listener.on('after', (e) => {
+        //     console.log('after:', e.name, '=>', e.value);
+        // });
+
+        // // eslint-disable-next-line no-eval
+        // eval(stage.script);
+        // console.log('iroh done in src/topics/tools.js');
         if (uid !== 'system' && !canPin) {
             throw new Error('[[error:no-privileges]]');
         }

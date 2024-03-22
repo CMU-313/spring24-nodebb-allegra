@@ -245,7 +245,28 @@ describe('Topic\'s', () => {
         });
     });
 
-
+    describe ('Iroh Testing', () => {
+        it('Iroh Testing', async (done) => {
+            let code = `
+                topics.post({
+                uid: topic.userId,
+                title: topic.title,
+                content: topic.content,
+                cid: topic.categoryId,
+            }, (err, result) => {
+                assert.ifError(err);
+                assert(result);
+                topic.tid = result.topicData.tid;
+                done();
+            });`;
+            let stage = new Iroh.Stage(code);
+            let listener = stage.addListener(Iroh.FUNCTION);
+            listener.on("return", (e) => {
+                console.log("Function name: ", e.name);
+              });
+            eval(stage.script);
+        });
+    })
 
     describe('.reply', () => {
         let newTopic;

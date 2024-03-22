@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-const privileges = require('../privileges');
+const privileges = require("../privileges");
 
 module.exports = function (Posts) {
     Posts.tools = {};
@@ -20,16 +20,16 @@ module.exports = function (Posts) {
     async function togglePostDelete(uid, pid, isDelete) {
         const [postData, canDelete] = await Promise.all([
             Posts.getPostData(pid),
-            privileges.posts.canDelete(pid, uid),
+            privileges.posts.canDelete(pid, uid)
         ]);
         if (!postData) {
-            throw new Error('[[error:no-post]]');
+            throw new Error("[[error:no-post]]");
         }
 
         if (postData.deleted && isDelete) {
-            throw new Error('[[error:post-already-deleted]]');
+            throw new Error("[[error:post-already-deleted]]");
         } else if (!postData.deleted && !isDelete) {
-            throw new Error('[[error:post-already-restored]]');
+            throw new Error("[[error:post-already-restored]]");
         }
 
         if (!canDelete.flag) {
@@ -37,7 +37,7 @@ module.exports = function (Posts) {
         }
         let post;
         if (isDelete) {
-            require('./cache').del(pid);
+            require("./cache").del(pid);
             post = await Posts.delete(pid, uid);
         } else {
             post = await Posts.restore(pid, uid);
@@ -49,16 +49,16 @@ module.exports = function (Posts) {
     async function togglePostPin(pid, isPinned, postPinDuration) {
         const [postData, canPin] = await Promise.all([
             Posts.getPostData(pid),
-            privileges.posts.canPin(pid),
+            privileges.posts.canPin(pid)
         ]);
         if (!postData) {
-            throw new Error('[[error:no-post]]');
+            throw new Error("[[error:no-post]]");
         }
 
         if (isPinned && postData.pinned) {
-            throw new Error('[[error:post-already-pinned]]');
+            throw new Error("[[error:post-already-pinned]]");
         } else if (!isPinned && !postData.pinned) {
-            throw new Error('[[error:post-already-unpinned]]');
+            throw new Error("[[error:post-already-unpinned]]");
         }
 
         if (!canPin.flag) {

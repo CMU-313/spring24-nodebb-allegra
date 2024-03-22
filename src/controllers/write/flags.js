@@ -1,15 +1,19 @@
-'use strict';
+"use strict";
 
-const user = require('../../user');
-const flags = require('../../flags');
-const api = require('../../api');
-const helpers = require('../helpers');
+const user = require("../../user");
+const flags = require("../../flags");
+const api = require("../../api");
+const helpers = require("../helpers");
 
 const Flags = module.exports;
 
 Flags.create = async (req, res) => {
     const flagObj = await api.flags.create(req, { ...req.body });
-    helpers.formatApiResponse(200, res, await user.isPrivileged(req.uid) ? flagObj : undefined);
+    helpers.formatApiResponse(
+        200,
+        res,
+        (await user.isPrivileged(req.uid)) ? flagObj : undefined
+    );
 };
 
 Flags.get = async (req, res) => {
@@ -24,7 +28,7 @@ Flags.get = async (req, res) => {
 Flags.update = async (req, res) => {
     const history = await api.flags.update(req, {
         flagId: req.params.flagId,
-        ...req.body,
+        ...req.body
     });
 
     helpers.formatApiResponse(200, res, { history });
@@ -38,7 +42,7 @@ Flags.delete = async (req, res) => {
 Flags.appendNote = async (req, res) => {
     const payload = await api.flags.appendNote(req, {
         flagId: req.params.flagId,
-        ...req.body,
+        ...req.body
     });
 
     helpers.formatApiResponse(200, res, payload);
@@ -46,7 +50,7 @@ Flags.appendNote = async (req, res) => {
 
 Flags.deleteNote = async (req, res) => {
     const payload = await api.flags.deleteNote(req, {
-        ...req.params,
+        ...req.params
     });
 
     helpers.formatApiResponse(200, res, payload);

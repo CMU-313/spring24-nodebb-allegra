@@ -5,7 +5,7 @@
 
         > li > a {
             &.focus {
-                &:extend(.dropdown-menu>li>a:focus);
+                &:extend(.dropdown-menu > li > a:focus);
             }
             &:focus {
                 outline: none;
@@ -14,25 +14,32 @@
     }
 
     .state-start-typing {
-        .keep-typing, .search-forum, .no-results {
+        .keep-typing,
+        .search-forum,
+        .no-results {
             display: none;
         }
     }
 
     .state-keep-typing {
-        .start-typing, .search-forum, .no-results {
+        .start-typing,
+        .search-forum,
+        .no-results {
             display: none;
         }
     }
 
     .state-no-results {
-        .keep-typing, .start-typing {
+        .keep-typing,
+        .start-typing {
             display: none;
         }
     }
 
     .state-yes-results {
-        .keep-typing, .start-typing, .no-results {
+        .keep-typing,
+        .start-typing,
+        .no-results {
             display: none;
         }
     }

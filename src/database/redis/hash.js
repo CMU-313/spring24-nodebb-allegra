@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
 module.exports = function (module) {
-    const helpers = require('./helpers');
+    const helpers = require("./helpers");
 
-    const cache = require('../cache').create('redis');
+    const cache = require("../cache").create("redis");
 
     module.objectCache = cache;
 
@@ -12,11 +12,11 @@ module.exports = function (module) {
             return;
         }
 
-        if (data.hasOwnProperty('')) {
-            delete data[''];
+        if (data.hasOwnProperty("")) {
+            delete data[""];
         }
 
-        Object.keys(data).forEach((key) => {
+        Object.keys(data).forEach(key => {
             if (data[key] === undefined || data[key] === null) {
                 delete data[key];
             }
@@ -42,13 +42,15 @@ module.exports = function (module) {
             return;
         }
         if (Array.isArray(args[1])) {
-            console.warn('[deprecated] db.setObjectBulk(keys, data) usage is deprecated, please use db.setObjectBulk(data)');
+            console.warn(
+                "[deprecated] db.setObjectBulk(keys, data) usage is deprecated, please use db.setObjectBulk(data)"
+            );
             // conver old format to new format for backwards compatibility
             data = args[0].map((key, i) => [key, args[1][i]]);
         }
 
         const batch = module.client.batch();
-        data.forEach((item) => {
+        data.forEach(item => {
             if (Object.keys(item[1]).length) {
                 batch.hmset(item[0], item[1]);
             }
@@ -92,7 +94,9 @@ module.exports = function (module) {
         const cachedData = {};
         cache.getUnCachedKeys([key], cachedData);
         if (cachedData[key]) {
-            return cachedData[key].hasOwnProperty(field) ? cachedData[key][field] : null;
+            return cachedData[key].hasOwnProperty(field)
+                ? cachedData[key][field]
+                : null;
         }
         return await module.client.hget(key, String(field));
     };
@@ -123,7 +127,7 @@ module.exports = function (module) {
         }
 
         // convert empty objects into null for back-compat with node_redis
-        data = data.map((elem) => {
+        data = data.map(elem => {
             if (!Object.keys(elem).length) {
                 return null;
             }
@@ -136,12 +140,14 @@ module.exports = function (module) {
         });
 
         if (!Array.isArray(fields) || !fields.length) {
-            return keys.map(key => (cachedData[key] ? { ...cachedData[key] } : null));
+            return keys.map(key =>
+                cachedData[key] ? { ...cachedData[key] } : null
+            );
         }
-        return keys.map((key) => {
+        return keys.map(key => {
             const item = cachedData[key] || {};
             const result = {};
-            fields.forEach((field) => {
+            fields.forEach(field => {
                 result[field] = item[field] !== undefined ? item[field] : null;
             });
             return result;
@@ -169,7 +175,12 @@ module.exports = function (module) {
     };
 
     module.deleteObjectField = async function (key, field) {
-        if (key === undefined || key === null || field === undefined || field === null) {
+        if (
+            key === undefined ||
+            key === null ||
+            field === undefined ||
+            field === null
+        ) {
             return;
         }
         await module.client.hdel(key, field);
@@ -177,7 +188,12 @@ module.exports = function (module) {
     };
 
     module.deleteObjectFields = async function (key, fields) {
-        if (!key || (Array.isArray(key) && !key.length) || !Array.isArray(fields) || !fields.length) {
+        if (
+            !key ||
+            (Array.isArray(key) && !key.length) ||
+            !Array.isArray(fields) ||
+            !fields.length
+        ) {
             return;
         }
         fields = fields.filter(Boolean);
@@ -217,7 +233,9 @@ module.exports = function (module) {
             result = await module.client.hincrby(key, field, value);
         }
         cache.del(key);
-        return Array.isArray(result) ? result.map(value => parseInt(value, 10)) : parseInt(result, 10);
+        return Array.isArray(result)
+            ? result.map(value => parseInt(value, 10))
+            : parseInt(result, 10);
     };
 
     module.incrObjectFieldByBulk = async function (data) {
@@ -226,7 +244,7 @@ module.exports = function (module) {
         }
 
         const batch = module.client.batch();
-        data.forEach((item) => {
+        data.forEach(item => {
             for (const [field, value] of Object.entries(item[1])) {
                 batch.hincrby(item[0], field, value);
             }

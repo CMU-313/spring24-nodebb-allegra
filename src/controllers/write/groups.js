@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const api = require('../../api');
+const api = require("../../api");
 
-const helpers = require('../helpers');
+const helpers = require("../helpers");
 
 const Groups = module.exports;
 
@@ -18,7 +18,7 @@ Groups.create = async (req, res) => {
 Groups.update = async (req, res) => {
     const groupObj = await api.groups.update(req, {
         ...req.body,
-        slug: req.params.slug,
+        slug: req.params.slug
     });
     helpers.formatApiResponse(200, res, groupObj);
 };

@@ -1,23 +1,21 @@
 {
-  "extends": [
-    "config:base"
-  ],
-  "baseBranches": ["develop"],
-  "labels": ["dependencies"],
-  "packageRules": [
-    {
-      "matchDepTypes": ["dependencies"],
-      "excludePackageNames": ["colors"],
-      "rangeStrategy": "pin"
-    },
-    {
-      "matchDepTypes": ["devDependencies"],
-      "automerge": true,
-      "rangeStrategy": "pin"
-    },
-    {
-      "matchDepTypes": ["engines"],
-      "rangeStrategy": "auto"
-    }
-  ]
+    "extends": ["config:base"],
+    "baseBranches": ["develop"],
+    "labels": ["dependencies"],
+    "packageRules": [
+        {
+            "matchDepTypes": ["dependencies"],
+            "excludePackageNames": ["colors"],
+            "rangeStrategy": "pin"
+        },
+        {
+            "matchDepTypes": ["devDependencies"],
+            "automerge": true,
+            "rangeStrategy": "pin"
+        },
+        {
+            "matchDepTypes": ["engines"],
+            "rangeStrategy": "auto"
+        }
+    ]
 }

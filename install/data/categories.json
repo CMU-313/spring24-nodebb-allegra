@@ -5,7 +5,7 @@
         "descriptionParsed": "<p>Announcements regarding our community</p>\n",
         "bgColor": "#fda34b",
         "color": "#ffffff",
-        "icon" : "fa-bullhorn",
+        "icon": "fa-bullhorn",
         "order": 1
     },
     {
@@ -14,7 +14,7 @@
         "descriptionParsed": "<p>A place to talk about whatever you want</p>\n",
         "bgColor": "#59b3d0",
         "color": "#ffffff",
-        "icon" : "fa-comments-o",
+        "icon": "fa-comments-o",
         "order": 2
     },
     {
@@ -23,7 +23,7 @@
         "descriptionParsed": "<p>Blog posts from individual members</p>\n",
         "bgColor": "#86ba4b",
         "color": "#ffffff",
-        "icon" : "fa-newspaper-o",
+        "icon": "fa-newspaper-o",
         "order": 4
     },
     {
@@ -32,7 +32,7 @@
         "descriptionParsed": "<p>Got a question? Ask away!</p>\n",
         "bgColor": "#e95c5a",
         "color": "#ffffff",
-        "icon" : "fa-question",
+        "icon": "fa-question",
         "order": 3
     }
 ]

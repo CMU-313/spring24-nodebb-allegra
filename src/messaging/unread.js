@@ -1,10 +1,10 @@
-'use strict';
+"use strict";
 
-const db = require('../database');
-const sockets = require('../socket.io');
+const db = require("../database");
+const sockets = require("../socket.io");
 
 module.exports = function (Messaging) {
-    Messaging.getUnreadCount = async (uid) => {
+    Messaging.getUnreadCount = async uid => {
         if (parseInt(uid, 10) <= 0) {
             return 0;
         }
@@ -12,19 +12,21 @@ module.exports = function (Messaging) {
         return await db.sortedSetCard(`uid:${uid}:chat:rooms:unread`);
     };
 
-    Messaging.pushUnreadCount = async (uid) => {
+    Messaging.pushUnreadCount = async uid => {
         if (parseInt(uid, 10) <= 0) {
             return;
         }
         const unreadCount = await Messaging.getUnreadCount(uid);
-        sockets.in(`uid_${uid}`).emit('event:unread.updateChatCount', unreadCount);
+        sockets
+            .in(`uid_${uid}`)
+            .emit("event:unread.updateChatCount", unreadCount);
     };
 
     Messaging.markRead = async (uid, roomId) => {
         await db.sortedSetRemove(`uid:${uid}:chat:rooms:unread`, roomId);
     };
 
-    Messaging.markAllRead = async (uid) => {
+    Messaging.markAllRead = async uid => {
         await db.delete(`uid:${uid}:chat:rooms:unread`);
     };
 

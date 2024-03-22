@@ -1,9 +1,9 @@
 Status:
-  type: object
-  properties:
-    code:
-      type: string
-      example: ok
-    message:
-      type: string
-      example: OK
+    type: object
+    properties:
+        code:
+            type: string
+            example: ok
+        message:
+            type: string
+            example: OK

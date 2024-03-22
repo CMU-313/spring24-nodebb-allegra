@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
 module.exports = function (module) {
-    const helpers = require('./helpers');
+    const helpers = require("./helpers");
 
     module.setAdd = async function (key, value) {
         if (!Array.isArray(value)) {

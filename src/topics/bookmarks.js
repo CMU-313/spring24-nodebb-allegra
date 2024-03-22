@@ -1,10 +1,9 @@
+"use strict";
 
-'use strict';
+const async = require("async");
 
-const async = require('async');
-
-const db = require('../database');
-const user = require('../user');
+const db = require("../database");
+const user = require("../user");
 
 module.exports = function (Topics) {
     Topics.getUserBookmark = async function (tid, uid) {
@@ -18,7 +17,10 @@ module.exports = function (Topics) {
         if (parseInt(uid, 10) <= 0) {
             return tids.map(() => null);
         }
-        return await db.sortedSetsScore(tids.map(tid => `tid:${tid}:bookmarks`), uid);
+        return await db.sortedSetsScore(
+            tids.map(tid => `tid:${tid}:bookmarks`),
+            uid
+        );
     };
 
     Topics.setUserBookmark = async function (tid, uid, index) {
@@ -26,7 +28,11 @@ module.exports = function (Topics) {
     };
 
     Topics.getTopicBookmarks = async function (tid) {
-        return await db.getSortedSetRangeWithScores(`tid:${tid}:bookmarks`, 0, -1);
+        return await db.getSortedSetRangeWithScores(
+            `tid:${tid}:bookmarks`,
+            0,
+            -1
+        );
     };
 
     Topics.updateTopicBookmarks = async function (tid, pids) {
@@ -37,13 +43,14 @@ module.exports = function (Topics) {
 
         const bookmarks = await Topics.getTopicBookmarks(tid);
 
-        const uidData = bookmarks.map(b => ({ uid: b.value, bookmark: parseInt(b.score, 10) }))
+        const uidData = bookmarks
+            .map(b => ({ uid: b.value, bookmark: parseInt(b.score, 10) }))
             .filter(data => data.bookmark >= minIndex);
 
-        await async.eachLimit(uidData, 50, async (data) => {
+        await async.eachLimit(uidData, 50, async data => {
             let bookmark = Math.min(data.bookmark, maxIndex);
 
-            postIndices.forEach((i) => {
+            postIndices.forEach(i => {
                 if (i < data.bookmark) {
                     bookmark -= 1;
                 }
@@ -56,7 +63,7 @@ module.exports = function (Topics) {
             }
 
             const settings = await user.getSettings(data.uid);
-            if (settings.topicPostSort === 'most_votes') {
+            if (settings.topicPostSort === "most_votes") {
                 return;
             }
 

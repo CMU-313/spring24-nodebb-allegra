@@ -21,10 +21,10 @@ module.exports = function (User) {
             User.getUserFields(
                 uid,
                 ["uid", "mutedUntil", "joindate", "email", "reputation"].concat(
-                    [field],
-                ),
+                    [field]
+                )
             ),
-            privileges.categories.isAdminOrMod(cid, uid),
+            privileges.categories.isAdminOrMod(cid, uid)
         ]);
 
         if (!userData.uid) {
@@ -43,14 +43,14 @@ module.exports = function (User) {
                 throw new Error(`[[error:user-muted-for-hours, ${muteLeft}]]`);
             } else {
                 throw new Error(
-                    `[[error:user-muted-for-minutes, ${muteLeft.toFixed(0)}]]`,
+                    `[[error:user-muted-for-minutes, ${muteLeft.toFixed(0)}]]`
                 );
             }
         }
 
         if (now - userData.joindate < meta.config.initialPostDelay * 1000) {
             throw new Error(
-                `[[error:user-too-new, ${meta.config.initialPostDelay}]]`,
+                `[[error:user-too-new, ${meta.config.initialPostDelay}]]`
             );
         }
 
@@ -62,11 +62,11 @@ module.exports = function (User) {
             now - lasttime < meta.config.newbiePostDelay * 1000
         ) {
             throw new Error(
-                `[[error:too-many-posts-newbie, ${meta.config.newbiePostDelay}, ${meta.config.newbiePostDelayThreshold}]]`,
+                `[[error:too-many-posts-newbie, ${meta.config.newbiePostDelay}, ${meta.config.newbiePostDelayThreshold}]]`
             );
         } else if (now - lasttime < meta.config.postDelay * 1000) {
             throw new Error(
-                `[[error:too-many-posts, ${meta.config.postDelay}]]`,
+                `[[error:too-many-posts, ${meta.config.postDelay}]]`
             );
         }
     }
@@ -79,7 +79,7 @@ module.exports = function (User) {
         await Promise.all([
             User.addPostIdToUser(postData),
             User.setUserField(postData.uid, "lastposttime", lastposttime),
-            User.updateLastOnlineTime(postData.uid),
+            User.updateLastOnlineTime(postData.uid)
         ]);
     };
 
@@ -87,30 +87,30 @@ module.exports = function (User) {
         await db.sortedSetsAdd(
             [
                 `uid:${postData.uid}:posts`,
-                `cid:${postData.cid}:uid:${postData.uid}:pids`,
+                `cid:${postData.cid}:uid:${postData.uid}:pids`
             ],
             postData.timestamp,
-            postData.pid,
+            postData.pid
         );
         await User.updatePostCount(postData.uid);
     };
 
-    User.updatePostCount = async (uids) => {
+    User.updatePostCount = async uids => {
         uids = Array.isArray(uids) ? uids : [uids];
         const exists = await User.exists(uids);
         uids = uids.filter((uid, index) => exists[index]);
         if (uids.length) {
             const counts = await db.sortedSetsCard(
-                uids.map((uid) => `uid:${uid}:posts`),
+                uids.map(uid => `uid:${uid}:posts`)
             );
             await Promise.all([
                 db.setObjectBulk(
                     uids.map((uid, index) => [
                         `user:${uid}`,
-                        { postcount: counts[index] },
-                    ]),
+                        { postcount: counts[index] }
+                    ])
                 ),
-                db.sortedSetAdd("users:postcount", counts, uids),
+                db.sortedSetAdd("users:postcount", counts, uids)
             ]);
         }
     };
@@ -120,7 +120,7 @@ module.exports = function (User) {
             uid,
             "postcount",
             "users:postcount",
-            value,
+            value
         );
     };
 
@@ -129,7 +129,7 @@ module.exports = function (User) {
             uid,
             "reputation",
             "users:reputation",
-            value,
+            value
         );
     };
 
@@ -138,7 +138,7 @@ module.exports = function (User) {
             uid,
             "flags",
             "users:flags",
-            value,
+            value
         );
     };
 

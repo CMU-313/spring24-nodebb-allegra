@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
 module.exports = function (opts) {
-    const TTLCache = require('@isaacs/ttlcache');
-    const pubsub = require('../pubsub');
+    const TTLCache = require("@isaacs/ttlcache");
+    const pubsub = require("../pubsub");
 
     const ttlCache = new TTLCache(opts);
 
@@ -10,15 +10,15 @@ module.exports = function (opts) {
     cache.name = opts.name;
     cache.hits = 0;
     cache.misses = 0;
-    cache.enabled = opts.hasOwnProperty('enabled') ? opts.enabled : true;
+    cache.enabled = opts.hasOwnProperty("enabled") ? opts.enabled : true;
     const cacheSet = ttlCache.set;
 
     // expose properties
     const propertyMap = new Map([
-        ['max', 'max'],
-        ['itemCount', 'size'],
-        ['size', 'size'],
-        ['ttl', 'ttl'],
+        ["max", "max"],
+        ["itemCount", "size"],
+        ["size", "size"],
+        ["ttl", "ttl"]
     ]);
     propertyMap.forEach((ttlProp, cacheProp) => {
         Object.defineProperty(cache, cacheProp, {
@@ -26,7 +26,7 @@ module.exports = function (opts) {
                 return ttlCache[ttlProp];
             },
             configurable: true,
-            enumerable: true,
+            enumerable: true
         });
     });
 
@@ -79,7 +79,7 @@ module.exports = function (opts) {
         localReset();
     });
 
-    pubsub.on(`${cache.name}:ttlCache:del`, (keys) => {
+    pubsub.on(`${cache.name}:ttlCache:del`, keys => {
         if (Array.isArray(keys)) {
             keys.forEach(key => ttlCache.delete(key));
         }
@@ -91,7 +91,7 @@ module.exports = function (opts) {
         }
         let data;
         let isCached;
-        const unCachedKeys = keys.filter((key) => {
+        const unCachedKeys = keys.filter(key => {
             data = cache.get(key);
             isCached = data !== undefined;
             if (isCached) {

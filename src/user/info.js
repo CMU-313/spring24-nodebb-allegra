@@ -1,19 +1,23 @@
-'use strict';
+"use strict";
 
-const _ = require('lodash');
-const validator = require('validator');
+const _ = require("lodash");
+const validator = require("validator");
 
-const db = require('../database');
-const posts = require('../posts');
-const topics = require('../topics');
-const utils = require('../utils');
+const db = require("../database");
+const posts = require("../posts");
+const topics = require("../topics");
+const utils = require("../utils");
 
 module.exports = function (User) {
     User.getLatestBanInfo = async function (uid) {
         // Simply retrieves the last record of the user's ban, even if they've been unbanned since then.
-        const record = await db.getSortedSetRevRange(`uid:${uid}:bans:timestamp`, 0, 0);
+        const record = await db.getSortedSetRevRange(
+            `uid:${uid}:bans:timestamp`,
+            0,
+            0
+        );
         if (!record.length) {
-            throw new Error('no-ban-info');
+            throw new Error("no-ban-info");
         }
         const banInfo = await db.getObject(record[0]);
         const expire = parseInt(banInfo.expire, 10);
@@ -22,30 +26,34 @@ module.exports = function (User) {
             uid: uid,
             timestamp: banInfo.timestamp,
             banned_until: expire,
-            expiry: expire, /* backward compatible alias */
+            expiry: expire /* backward compatible alias */,
             banned_until_readable: expire_readable,
-            expiry_readable: expire_readable, /* backward compatible alias */
-            reason: validator.escape(String(banInfo.reason || '')),
+            expiry_readable: expire_readable /* backward compatible alias */,
+            reason: validator.escape(String(banInfo.reason || ""))
         };
     };
 
     User.getModerationHistory = async function (uid) {
         let [flags, bans, mutes] = await Promise.all([
-            db.getSortedSetRevRangeWithScores(`flags:byTargetUid:${uid}`, 0, 19),
+            db.getSortedSetRevRangeWithScores(
+                `flags:byTargetUid:${uid}`,
+                0,
+                19
+            ),
             db.getSortedSetRevRange(`uid:${uid}:bans:timestamp`, 0, 19),
-            db.getSortedSetRevRange(`uid:${uid}:mutes:timestamp`, 0, 19),
+            db.getSortedSetRevRange(`uid:${uid}:mutes:timestamp`, 0, 19)
         ]);
 
         // Get pids from flag objects
         const keys = flags.map(flagObj => `flag:${flagObj.value}`);
-        const payload = await db.getObjectsFields(keys, ['type', 'targetId']);
+        const payload = await db.getObjectsFields(keys, ["type", "targetId"]);
 
         // Only pass on flag ids from posts
         flags = payload.reduce((memo, cur, idx) => {
-            if (cur.type === 'post') {
+            if (cur.type === "post") {
                 memo.push({
                     value: parseInt(cur.targetId, 10),
-                    score: flags[idx].score,
+                    score: flags[idx].score
                 });
             }
 
@@ -54,23 +62,23 @@ module.exports = function (User) {
 
         [flags, bans, mutes] = await Promise.all([
             getFlagMetadata(flags),
-            formatBanMuteData(bans, '[[user:info.banned-no-reason]]'),
-            formatBanMuteData(mutes, '[[user:info.muted-no-reason]]'),
+            formatBanMuteData(bans, "[[user:info.banned-no-reason]]"),
+            formatBanMuteData(mutes, "[[user:info.muted-no-reason]]")
         ]);
 
         return {
             flags: flags,
             bans: bans,
-            mutes: mutes,
+            mutes: mutes
         };
     };
 
     User.getHistory = async function (set) {
         const data = await db.getSortedSetRevRangeWithScores(set, 0, -1);
-        return data.map((set) => {
+        return data.map(set => {
             set.timestamp = set.score;
             set.timestampISO = utils.toISOString(set.score);
-            set.value = validator.escape(String(set.value.split(':')[0]));
+            set.value = validator.escape(String(set.value.split(":")[0]));
             delete set.score;
             return set;
         });
@@ -78,10 +86,10 @@ module.exports = function (User) {
 
     async function getFlagMetadata(flags) {
         const pids = flags.map(flagObj => parseInt(flagObj.value, 10));
-        const postData = await posts.getPostsFields(pids, ['tid']);
+        const postData = await posts.getPostsFields(pids, ["tid"]);
         const tids = postData.map(post => post.tid);
 
-        const topicData = await topics.getTopicsFields(tids, ['title']);
+        const topicData = await topics.getTopicsFields(tids, ["title"]);
         flags = flags.map((flagObj, idx) => {
             flagObj.pid = flagObj.value;
             flagObj.timestamp = flagObj.score;
@@ -101,25 +109,38 @@ module.exports = function (User) {
     async function formatBanMuteData(keys, noReasonLangKey) {
         const data = await db.getObjects(keys);
         const uids = data.map(d => d.fromUid);
-        const usersData = await User.getUsersFields(uids, ['uid', 'username', 'userslug', 'picture']);
+        const usersData = await User.getUsersFields(uids, [
+            "uid",
+            "username",
+            "userslug",
+            "picture"
+        ]);
         return data.map((banObj, index) => {
             banObj.user = usersData[index];
             banObj.until = parseInt(banObj.expire, 10);
             banObj.untilReadable = new Date(banObj.until).toString();
-            banObj.timestampReadable = new Date(parseInt(banObj.timestamp, 10)).toString();
+            banObj.timestampReadable = new Date(
+                parseInt(banObj.timestamp, 10)
+            ).toString();
             banObj.timestampISO = utils.toISOString(banObj.timestamp);
-            banObj.reason = validator.escape(String(banObj.reason || '')) || noReasonLangKey;
+            banObj.reason =
+                validator.escape(String(banObj.reason || "")) ||
+                noReasonLangKey;
             return banObj;
         });
     }
 
     User.getModerationNotes = async function (uid, start, stop) {
-        const noteIds = await db.getSortedSetRevRange(`uid:${uid}:moderation:notes`, start, stop);
+        const noteIds = await db.getSortedSetRevRange(
+            `uid:${uid}:moderation:notes`,
+            start,
+            stop
+        );
         const keys = noteIds.map(id => `uid:${uid}:moderation:note:${id}`);
         const notes = await db.getObjects(keys);
         const uids = [];
 
-        const noteData = notes.map((note) => {
+        const noteData = notes.map(note => {
             if (note) {
                 uids.push(note.uid);
                 note.timestampISO = utils.toISOString(note.timestamp);
@@ -128,7 +149,12 @@ module.exports = function (User) {
             return note;
         });
 
-        const userData = await User.getUsersFields(uids, ['uid', 'username', 'userslug', 'picture']);
+        const userData = await User.getUsersFields(uids, [
+            "uid",
+            "username",
+            "userslug",
+            "picture"
+        ]);
         noteData.forEach((note, index) => {
             if (note) {
                 note.user = userData[index];
@@ -138,7 +164,14 @@ module.exports = function (User) {
     };
 
     User.appendModerationNote = async ({ uid, noteData }) => {
-        await db.sortedSetAdd(`uid:${uid}:moderation:notes`, noteData.timestamp, noteData.timestamp);
-        await db.setObject(`uid:${uid}:moderation:note:${noteData.timestamp}`, noteData);
+        await db.sortedSetAdd(
+            `uid:${uid}:moderation:notes`,
+            noteData.timestamp,
+            noteData.timestamp
+        );
+        await db.setObject(
+            `uid:${uid}:moderation:note:${noteData.timestamp}`,
+            noteData
+        );
     };
 };

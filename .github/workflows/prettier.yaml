@@ -14,9 +14,10 @@ permissions:
 jobs:
     prettier:
         name: Run Prettier
-        matrix:
-            os: [ubuntu-latest]
-            node: [16]
+        strategy: 
+            matrix:
+                os: [ubuntu-latest]
+                node: [16]
         runs-on: ${{ matrix.os }}
         env:
             TEST_ENV: ${{ matrix.test_env || 'production' }}

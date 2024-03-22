@@ -14,19 +14,26 @@ permissions:
 jobs:
     prettier:
         name: Run Prettier
-        runs-on: ubuntu-latest
+            strategy:
+        matrix:
+        os: [ubuntu-latest]
+        node: [16]
+        runs-on: ${{ matrix.os }}
+        env:
+            TEST_ENV: ${{ matrix.test_env || 'production' }}
         steps:
             - uses: actions/checkout@v3
-              with:
-                  node-version: 16
+
 
             - name: Setup Node.js
               uses: actions/setup-node@v3
               with:
-                  node-version: 16
+                  node-version: ${{ matrix.node }}
 
-            - name: Install dependencies
-              run: npm install
+            - name: NPM Install
+              uses: bahmutov/npm-install@v1
+              with:
+                useLockFile: false
 
             - name: Run Prettier
               run: npm run format:check

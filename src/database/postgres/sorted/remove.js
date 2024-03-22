@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
 module.exports = function (module) {
-    const helpers = require('../helpers');
+    const helpers = require("../helpers");
 
     module.sortedSetRemove = async function (key, value) {
         if (!key) {
@@ -21,12 +21,12 @@ module.exports = function (module) {
         }
         value = value.map(helpers.valueToString);
         await module.pool.query({
-            name: 'sortedSetRemove',
+            name: "sortedSetRemove",
             text: `
 DELETE FROM "legacy_zset"
  WHERE "_key" = ANY($1::TEXT[])
    AND "value" = ANY($2::TEXT[])`,
-            values: [key, value],
+            values: [key, value]
         });
     };
 
@@ -38,12 +38,12 @@ DELETE FROM "legacy_zset"
         value = helpers.valueToString(value);
 
         await module.pool.query({
-            name: 'sortedSetsRemove',
+            name: "sortedSetsRemove",
             text: `
 DELETE FROM "legacy_zset"
  WHERE "_key" = ANY($1::TEXT[])
    AND "value" = $2::TEXT`,
-            values: [keys, value],
+            values: [keys, value]
         });
     };
 
@@ -52,21 +52,21 @@ DELETE FROM "legacy_zset"
             return;
         }
 
-        if (min === '-inf') {
+        if (min === "-inf") {
             min = null;
         }
-        if (max === '+inf') {
+        if (max === "+inf") {
             max = null;
         }
 
         await module.pool.query({
-            name: 'sortedSetsRemoveRangeByScore',
+            name: "sortedSetsRemoveRangeByScore",
             text: `
 DELETE FROM "legacy_zset"
  WHERE "_key" = ANY($1::TEXT[])
    AND ("score" >= $2::NUMERIC OR $2::NUMERIC IS NULL)
    AND ("score" <= $3::NUMERIC OR $3::NUMERIC IS NULL)`,
-            values: [keys, min, max],
+            values: [keys, min, max]
         });
     };
 
@@ -78,14 +78,14 @@ DELETE FROM "legacy_zset"
         const values = data.map(d => d[1]);
 
         await module.pool.query({
-            name: 'sortedSetRemoveBulk',
+            name: "sortedSetRemoveBulk",
             text: `
     DELETE FROM "legacy_zset"
     WHERE (_key, value) IN (
         SELECT k, v
         FROM UNNEST($1::TEXT[], $2::TEXT[]) vs(k, v)
         )`,
-            values: [keys, values],
+            values: [keys, values]
         });
     };
 };

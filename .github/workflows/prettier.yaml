@@ -1,0 +1,40 @@
+name: Prettier CI
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+
+permissions:
+    contents: read
+
+jobs:
+    prettier:
+        name: Run Prettier
+        strategy:
+            matrix:
+                os: [ubuntu-latest]
+                node: [16]
+        runs-on: ${{ matrix.os }}
+        env:
+            TEST_ENV: ${{ matrix.test_env || 'production' }}
+        steps:
+            - uses: actions/checkout@v3
+
+            - run: cp install/package.json package.json
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ matrix.node }}
+
+            - name: NPM Install
+              uses: bahmutov/npm-install@v1
+              with:
+                  useLockFile: false
+
+            - name: Run Prettier
+              run: npm run format:check

@@ -1,22 +1,22 @@
-'use strict';
+"use strict";
 
-const user = require('../../user');
-const authenticationController = require('../authentication');
-const helpers = require('../helpers');
+const user = require("../../user");
+const authenticationController = require("../authentication");
+const helpers = require("../helpers");
 
 const Utilities = module.exports;
 
 Utilities.ping = {};
 Utilities.ping.get = (req, res) => {
     helpers.formatApiResponse(200, res, {
-        pong: true,
+        pong: true
     });
 };
 
 Utilities.ping.post = (req, res) => {
     helpers.formatApiResponse(200, res, {
         uid: req.user.uid,
-        received: req.body,
+        received: req.body
     });
 };
 

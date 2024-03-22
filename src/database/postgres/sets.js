@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
-const _ = require('lodash');
+const _ = require("lodash");
 
 module.exports = function (module) {
-    const helpers = require('./helpers');
+    const helpers = require("./helpers");
 
     module.setAdd = async function (key, value) {
         if (!Array.isArray(value)) {
@@ -12,17 +12,17 @@ module.exports = function (module) {
         if (!value.length) {
             return;
         }
-        await module.transaction(async (client) => {
-            await helpers.ensureLegacyObjectType(client, key, 'set');
+        await module.transaction(async client => {
+            await helpers.ensureLegacyObjectType(client, key, "set");
             await client.query({
-                name: 'setAdd',
+                name: "setAdd",
                 text: `
 INSERT INTO "legacy_set" ("_key", "member")
 SELECT $1::TEXT, m
 FROM UNNEST($2::TEXT[]) m
 ON CONFLICT ("_key", "member")
 DO NOTHING`,
-                values: [key, value],
+                values: [key, value]
             });
         });
     };
@@ -38,10 +38,10 @@ DO NOTHING`,
 
         keys = _.uniq(keys);
 
-        await module.transaction(async (client) => {
-            await helpers.ensureLegacyObjectsType(client, keys, 'set');
+        await module.transaction(async client => {
+            await helpers.ensureLegacyObjectsType(client, keys, "set");
             await client.query({
-                name: 'setsAdd',
+                name: "setsAdd",
                 text: `
 INSERT INTO "legacy_set" ("_key", "member")
 SELECT k, m
@@ -49,7 +49,7 @@ FROM UNNEST($1::TEXT[]) k
 CROSS JOIN UNNEST($2::TEXT[]) m
 ON CONFLICT ("_key", "member")
 DO NOTHING`,
-                values: [keys, value],
+                values: [keys, value]
             });
         });
     };
@@ -64,12 +64,12 @@ DO NOTHING`,
         }
 
         await module.pool.query({
-            name: 'setRemove',
+            name: "setRemove",
             text: `
 DELETE FROM "legacy_set"
  WHERE "_key" = ANY($1::TEXT[])
    AND "member" = ANY($2::TEXT[])`,
-            values: [key, value],
+            values: [key, value]
         });
     };
 
@@ -79,12 +79,12 @@ DELETE FROM "legacy_set"
         }
 
         await module.pool.query({
-            name: 'setsRemove',
+            name: "setsRemove",
             text: `
 DELETE FROM "legacy_set"
  WHERE "_key" = ANY($1::TEXT[])
    AND "member" = $2::TEXT`,
-            values: [keys, value],
+            values: [keys, value]
         });
     };
 
@@ -94,7 +94,7 @@ DELETE FROM "legacy_set"
         }
 
         const res = await module.pool.query({
-            name: 'isSetMember',
+            name: "isSetMember",
             text: `
 SELECT 1
   FROM "legacy_object_live" o
@@ -103,7 +103,7 @@ SELECT 1
    AND o."type" = s."type"
  WHERE o."_key" = $1::TEXT
    AND s."member" = $2::TEXT`,
-            values: [key, value],
+            values: [key, value]
         });
 
         return !!res.rows.length;
@@ -117,7 +117,7 @@ SELECT 1
         values = values.map(helpers.valueToString);
 
         const res = await module.pool.query({
-            name: 'isSetMembers',
+            name: "isSetMembers",
             text: `
 SELECT s."member" m
   FROM "legacy_object_live" o
@@ -126,7 +126,7 @@ SELECT s."member" m
         AND o."type" = s."type"
  WHERE o."_key" = $1::TEXT
    AND s."member" = ANY($2::TEXT[])`,
-            values: [key, values],
+            values: [key, values]
         });
 
         return values.map(v => res.rows.some(r => r.m === v));
@@ -140,7 +140,7 @@ SELECT s."member" m
         value = helpers.valueToString(value);
 
         const res = await module.pool.query({
-            name: 'isMemberOfSets',
+            name: "isMemberOfSets",
             text: `
 SELECT o."_key" k
   FROM "legacy_object_live" o
@@ -149,7 +149,7 @@ SELECT o."_key" k
         AND o."type" = s."type"
  WHERE o."_key" = ANY($1::TEXT[])
    AND s."member" = $2::TEXT`,
-            values: [sets, value],
+            values: [sets, value]
         });
 
         return sets.map(s => res.rows.some(r => r.k === s));
@@ -161,7 +161,7 @@ SELECT o."_key" k
         }
 
         const res = await module.pool.query({
-            name: 'getSetMembers',
+            name: "getSetMembers",
             text: `
 SELECT s."member" m
   FROM "legacy_object_live" o
@@ -169,7 +169,7 @@ SELECT s."member" m
          ON o."_key" = s."_key"
         AND o."type" = s."type"
  WHERE o."_key" = $1::TEXT`,
-            values: [key],
+            values: [key]
         });
 
         return res.rows.map(r => r.m);
@@ -181,7 +181,7 @@ SELECT s."member" m
         }
 
         const res = await module.pool.query({
-            name: 'getSetsMembers',
+            name: "getSetsMembers",
             text: `
 SELECT o."_key" k,
        array_agg(s."member") m
@@ -191,7 +191,7 @@ SELECT o."_key" k,
         AND o."type" = s."type"
  WHERE o."_key" = ANY($1::TEXT[])
  GROUP BY o."_key"`,
-            values: [keys],
+            values: [keys]
         });
 
         return keys.map(k => (res.rows.find(r => r.k === k) || { m: [] }).m);
@@ -203,7 +203,7 @@ SELECT o."_key" k,
         }
 
         const res = await module.pool.query({
-            name: 'setCount',
+            name: "setCount",
             text: `
 SELECT COUNT(*) c
   FROM "legacy_object_live" o
@@ -211,7 +211,7 @@ SELECT COUNT(*) c
          ON o."_key" = s."_key"
         AND o."type" = s."type"
  WHERE o."_key" = $1::TEXT`,
-            values: [key],
+            values: [key]
         });
 
         return parseInt(res.rows[0].c, 10);
@@ -219,7 +219,7 @@ SELECT COUNT(*) c
 
     module.setsCount = async function (keys) {
         const res = await module.pool.query({
-            name: 'setsCount',
+            name: "setsCount",
             text: `
 SELECT o."_key" k,
        COUNT(*) c
@@ -229,7 +229,7 @@ SELECT o."_key" k,
         AND o."type" = s."type"
  WHERE o."_key" = ANY($1::TEXT[])
  GROUP BY o."_key"`,
-            values: [keys],
+            values: [keys]
         });
 
         return keys.map(k => (res.rows.find(r => r.k === k) || { c: 0 }).c);
@@ -237,7 +237,7 @@ SELECT o."_key" k,
 
     module.setRemoveRandom = async function (key) {
         const res = await module.pool.query({
-            name: 'setRemoveRandom',
+            name: "setRemoveRandom",
             text: `
 WITH A AS (
     SELECT s."member"
@@ -254,7 +254,7 @@ DELETE FROM "legacy_set" s
  WHERE s."_key" = $1::TEXT
    AND s."member" = A."member"
 RETURNING A."member" m`,
-            values: [key],
+            values: [key]
         });
         return res.rows.length ? res.rows[0].m : null;
     };

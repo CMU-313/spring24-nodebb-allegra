@@ -1,21 +1,21 @@
-'use strict';
+"use strict";
 
-const async = require('async');
-const _ = require('lodash');
+const async = require("async");
+const _ = require("lodash");
 
-const db = require('../database');
-const plugins = require('../plugins');
-const privileges = require('../privileges');
-const utils = require('../utils');
-const slugify = require('../slugify');
-const cache = require('../cache');
+const db = require("../database");
+const plugins = require("../plugins");
+const privileges = require("../privileges");
+const utils = require("../utils");
+const slugify = require("../slugify");
+const cache = require("../cache");
 
 module.exports = function (Categories) {
     Categories.create = async function (data) {
         const parentCid = data.parentCid ? data.parentCid : 0;
         const [cid, firstChild] = await Promise.all([
-            db.incrObjectField('global', 'nextCid'),
-            db.getSortedSetRangeWithScores(`cid:${parentCid}:children`, 0, 0),
+            db.incrObjectField("global", "nextCid"),
+            db.getSortedSetRangeWithScores(`cid:${parentCid}:children`, 0, 0)
         ]);
 
         data.name = String(data.name || `Category ${cid}`);
@@ -27,9 +27,11 @@ module.exports = function (Categories) {
         let category = {
             cid: cid,
             name: data.name,
-            description: data.description ? data.description : '',
-            descriptionParsed: data.descriptionParsed ? data.descriptionParsed : '',
-            icon: data.icon ? data.icon : '',
+            description: data.description ? data.description : "",
+            descriptionParsed: data.descriptionParsed
+                ? data.descriptionParsed
+                : "",
+            icon: data.icon ? data.icon : "",
             bgColor: data.bgColor || colours[0],
             color: data.color || colours[1],
             slug: slug,
@@ -38,12 +40,12 @@ module.exports = function (Categories) {
             post_count: 0,
             disabled: data.disabled ? 1 : 0,
             order: order,
-            link: data.link || '',
+            link: data.link || "",
             numRecentReplies: 1,
-            class: (data.class ? data.class : 'col-md-3 col-xs-6'),
-            imageClass: 'cover',
+            class: data.class ? data.class : "col-md-3 col-xs-6",
+            imageClass: "cover",
             isSection: 0,
-            subCategoriesPerPage: 10,
+            subCategoriesPerPage: 10
         };
 
         if (data.backgroundImage) {
@@ -51,64 +53,93 @@ module.exports = function (Categories) {
         }
 
         const defaultPrivileges = [
-            'groups:find',
-            'groups:read',
-            'groups:topics:read',
-            'groups:topics:create',
-            'groups:topics:reply',
-            'groups:topics:tag',
-            'groups:posts:edit',
-            'groups:posts:history',
-            'groups:posts:delete',
-            'groups:posts:upvote',
-            'groups:posts:downvote',
-            'groups:topics:delete',
+            "groups:find",
+            "groups:read",
+            "groups:topics:read",
+            "groups:topics:create",
+            "groups:topics:reply",
+            "groups:topics:tag",
+            "groups:posts:edit",
+            "groups:posts:history",
+            "groups:posts:delete",
+            "groups:posts:upvote",
+            "groups:posts:downvote",
+            "groups:topics:delete"
         ];
         const modPrivileges = defaultPrivileges.concat([
-            'groups:topics:schedule',
-            'groups:posts:view_deleted',
-            'groups:purge',
+            "groups:topics:schedule",
+            "groups:posts:view_deleted",
+            "groups:purge"
         ]);
-        const guestPrivileges = ['groups:find', 'groups:read', 'groups:topics:read'];
+        const guestPrivileges = [
+            "groups:find",
+            "groups:read",
+            "groups:topics:read"
+        ];
 
-        const result = await plugins.hooks.fire('filter:category.create', {
+        const result = await plugins.hooks.fire("filter:category.create", {
             category: category,
             data: data,
             defaultPrivileges: defaultPrivileges,
             modPrivileges: modPrivileges,
-            guestPrivileges: guestPrivileges,
+            guestPrivileges: guestPrivileges
         });
         category = result.category;
 
         await db.setObject(`category:${category.cid}`, category);
         if (!category.descriptionParsed) {
-            await Categories.parseDescription(category.cid, category.description);
+            await Categories.parseDescription(
+                category.cid,
+                category.description
+            );
         }
 
         await db.sortedSetAddBulk([
-            ['categories:cid', category.order, category.cid],
+            ["categories:cid", category.order, category.cid],
             [`cid:${parentCid}:children`, category.order, category.cid],
-            ['categories:name', 0, `${data.name.slice(0, 200).toLowerCase()}:${category.cid}`],
+            [
+                "categories:name",
+                0,
+                `${data.name.slice(0, 200).toLowerCase()}:${category.cid}`
+            ]
         ]);
 
-        await privileges.categories.give(result.defaultPrivileges, category.cid, 'registered-users');
-        await privileges.categories.give(result.modPrivileges, category.cid, ['administrators', 'Global Moderators']);
-        await privileges.categories.give(result.guestPrivileges, category.cid, ['guests', 'spiders']);
+        await privileges.categories.give(
+            result.defaultPrivileges,
+            category.cid,
+            "registered-users"
+        );
+        await privileges.categories.give(result.modPrivileges, category.cid, [
+            "administrators",
+            "Global Moderators"
+        ]);
+        await privileges.categories.give(result.guestPrivileges, category.cid, [
+            "guests",
+            "spiders"
+        ]);
 
         cache.del([
-            'categories:cid',
+            "categories:cid",
             `cid:${parentCid}:children`,
-            `cid:${parentCid}:children:all`,
+            `cid:${parentCid}:children:all`
         ]);
         if (data.cloneFromCid && parseInt(data.cloneFromCid, 10)) {
-            category = await Categories.copySettingsFrom(data.cloneFromCid, category.cid, !data.parentCid);
+            category = await Categories.copySettingsFrom(
+                data.cloneFromCid,
+                category.cid,
+                !data.parentCid
+            );
         }
 
         if (data.cloneChildren) {
-            await duplicateCategoriesChildren(category.cid, data.cloneFromCid, data.uid);
+            await duplicateCategoriesChildren(
+                category.cid,
+                data.cloneFromCid,
+                data.uid
+            );
         }
 
-        plugins.hooks.fire('action:category.create', { category: category });
+        plugins.hooks.fire("action:category.create", { category: category });
         return category;
     };
 
@@ -120,7 +151,7 @@ module.exports = function (Categories) {
 
         children = children[0];
 
-        children.forEach((child) => {
+        children.forEach(child => {
             child.parentCid = parentCid;
             child.cloneFromCid = child.cid;
             child.cloneChildren = true;
@@ -133,8 +164,26 @@ module.exports = function (Categories) {
     }
 
     Categories.assignColours = function () {
-        const backgrounds = ['#AB4642', '#DC9656', '#F7CA88', '#A1B56C', '#86C1B9', '#7CAFC2', '#BA8BAF', '#A16946'];
-        const text = ['#ffffff', '#ffffff', '#333333', '#ffffff', '#333333', '#ffffff', '#ffffff', '#ffffff'];
+        const backgrounds = [
+            "#AB4642",
+            "#DC9656",
+            "#F7CA88",
+            "#A1B56C",
+            "#86C1B9",
+            "#7CAFC2",
+            "#BA8BAF",
+            "#A16946"
+        ];
+        const text = [
+            "#ffffff",
+            "#ffffff",
+            "#333333",
+            "#ffffff",
+            "#333333",
+            "#ffffff",
+            "#ffffff",
+            "#ffffff"
+        ];
         const index = Math.floor(Math.random() * backgrounds.length);
         return [backgrounds[index], text[index]];
     };
@@ -142,22 +191,26 @@ module.exports = function (Categories) {
     Categories.copySettingsFrom = async function (fromCid, toCid, copyParent) {
         const [source, destination] = await Promise.all([
             db.getObject(`category:${fromCid}`),
-            db.getObject(`category:${toCid}`),
+            db.getObject(`category:${toCid}`)
         ]);
         if (!source) {
-            throw new Error('[[error:invalid-cid]]');
+            throw new Error("[[error:invalid-cid]]");
         }
 
         const oldParent = parseInt(destination.parentCid, 10) || 0;
         const newParent = parseInt(source.parentCid, 10) || 0;
         if (copyParent && newParent !== parseInt(toCid, 10)) {
             await db.sortedSetRemove(`cid:${oldParent}:children`, toCid);
-            await db.sortedSetAdd(`cid:${newParent}:children`, source.order, toCid);
+            await db.sortedSetAdd(
+                `cid:${newParent}:children`,
+                source.order,
+                toCid
+            );
             cache.del([
                 `cid:${oldParent}:children`,
                 `cid:${oldParent}:children:all`,
                 `cid:${newParent}:children`,
-                `cid:${newParent}:children:all`,
+                `cid:${newParent}:children:all`
             ]);
         }
 
@@ -177,10 +230,10 @@ module.exports = function (Categories) {
         if (copyParent) {
             destination.parentCid = source.parentCid || 0;
         }
-        await plugins.hooks.fire('filter:categories.copySettingsFrom', {
+        await plugins.hooks.fire("filter:categories.copySettingsFrom", {
             source: source,
             destination: destination,
-            copyParent: copyParent,
+            copyParent: copyParent
         });
 
         await db.setObject(`category:${toCid}`, destination);
@@ -193,57 +246,96 @@ module.exports = function (Categories) {
     };
 
     async function copyTagWhitelist(fromCid, toCid) {
-        const data = await db.getSortedSetRangeWithScores(`cid:${fromCid}:tag:whitelist`, 0, -1);
+        const data = await db.getSortedSetRangeWithScores(
+            `cid:${fromCid}:tag:whitelist`,
+            0,
+            -1
+        );
         await db.delete(`cid:${toCid}:tag:whitelist`);
-        await db.sortedSetAdd(`cid:${toCid}:tag:whitelist`, data.map(item => item.score), data.map(item => item.value));
+        await db.sortedSetAdd(
+            `cid:${toCid}:tag:whitelist`,
+            data.map(item => item.score),
+            data.map(item => item.value)
+        );
         cache.del(`cid:${toCid}:tag:whitelist`);
     }
 
-    Categories.copyPrivilegesFrom = async function (fromCid, toCid, group, filter = []) {
-        group = group || '';
+    Categories.copyPrivilegesFrom = async function (
+        fromCid,
+        toCid,
+        group,
+        filter = []
+    ) {
+        group = group || "";
         let privsToCopy;
         if (group) {
-            const groupPrivilegeList = await privileges.categories.getGroupPrivilegeList();
+            const groupPrivilegeList =
+                await privileges.categories.getGroupPrivilegeList();
             privsToCopy = groupPrivilegeList.slice(...filter);
         } else {
             const privs = await privileges.categories.getPrivilegeList();
             const halfIdx = privs.length / 2;
-            privsToCopy = privs.slice(0, halfIdx).slice(...filter).concat(privs.slice(halfIdx).slice(...filter));
+            privsToCopy = privs
+                .slice(0, halfIdx)
+                .slice(...filter)
+                .concat(privs.slice(halfIdx).slice(...filter));
         }
 
-        const data = await plugins.hooks.fire('filter:categories.copyPrivilegesFrom', {
-            privileges: privsToCopy,
-            fromCid: fromCid,
-            toCid: toCid,
-            group: group,
-        });
+        const data = await plugins.hooks.fire(
+            "filter:categories.copyPrivilegesFrom",
+            {
+                privileges: privsToCopy,
+                fromCid: fromCid,
+                toCid: toCid,
+                group: group
+            }
+        );
         if (group) {
-            await copyPrivilegesByGroup(data.privileges, data.fromCid, data.toCid, group);
+            await copyPrivilegesByGroup(
+                data.privileges,
+                data.fromCid,
+                data.toCid,
+                group
+            );
         } else {
             await copyPrivileges(data.privileges, data.fromCid, data.toCid);
         }
     };
 
     async function copyPrivileges(privileges, fromCid, toCid) {
-        const toGroups = privileges.map(privilege => `group:cid:${toCid}:privileges:${privilege}:members`);
-        const fromGroups = privileges.map(privilege => `group:cid:${fromCid}:privileges:${privilege}:members`);
+        const toGroups = privileges.map(
+            privilege => `group:cid:${toCid}:privileges:${privilege}:members`
+        );
+        const fromGroups = privileges.map(
+            privilege => `group:cid:${fromCid}:privileges:${privilege}:members`
+        );
 
-        const currentMembers = await db.getSortedSetsMembers(toGroups.concat(fromGroups));
+        const currentMembers = await db.getSortedSetsMembers(
+            toGroups.concat(fromGroups)
+        );
         const copyGroups = _.uniq(_.flatten(currentMembers));
-        await async.each(copyGroups, async (group) => {
+        await async.each(copyGroups, async group => {
             await copyPrivilegesByGroup(privileges, fromCid, toCid, group);
         });
     }
 
     async function copyPrivilegesByGroup(privilegeList, fromCid, toCid, group) {
-        const fromGroups = privilegeList.map(privilege => `group:cid:${fromCid}:privileges:${privilege}:members`);
-        const toGroups = privilegeList.map(privilege => `group:cid:${toCid}:privileges:${privilege}:members`);
+        const fromGroups = privilegeList.map(
+            privilege => `group:cid:${fromCid}:privileges:${privilege}:members`
+        );
+        const toGroups = privilegeList.map(
+            privilege => `group:cid:${toCid}:privileges:${privilege}:members`
+        );
         const [fromChecks, toChecks] = await Promise.all([
             db.isMemberOfSortedSets(fromGroups, group),
-            db.isMemberOfSortedSets(toGroups, group),
+            db.isMemberOfSortedSets(toGroups, group)
         ]);
-        const givePrivs = privilegeList.filter((priv, index) => fromChecks[index] && !toChecks[index]);
-        const rescindPrivs = privilegeList.filter((priv, index) => !fromChecks[index] && toChecks[index]);
+        const givePrivs = privilegeList.filter(
+            (priv, index) => fromChecks[index] && !toChecks[index]
+        );
+        const rescindPrivs = privilegeList.filter(
+            (priv, index) => !fromChecks[index] && toChecks[index]
+        );
         await privileges.categories.give(givePrivs, toCid, group);
         await privileges.categories.rescind(rescindPrivs, toCid, group);
     }

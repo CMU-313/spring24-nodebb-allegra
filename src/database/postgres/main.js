@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
 module.exports = function (module) {
-    const helpers = require('./helpers');
+    const helpers = require("./helpers");
 
     module.flushdb = async function () {
         await module.pool.query(`DROP SCHEMA "public" CASCADE`);
@@ -19,9 +19,11 @@ module.exports = function (module) {
 
         // Redis/Mongo consider empty zsets as non-existent, match that behaviour
         const type = await module.type(key);
-        if (type === 'zset') {
+        if (type === "zset") {
             if (Array.isArray(key)) {
-                const members = await Promise.all(key.map(key => module.getSortedSetRange(key, 0, 0)));
+                const members = await Promise.all(
+                    key.map(key => module.getSortedSetRange(key, 0, 0))
+                );
                 return members.map(member => member.length > 0);
             }
             const members = await module.getSortedSetRange(key, 0, 0);
@@ -30,33 +32,33 @@ module.exports = function (module) {
 
         if (Array.isArray(key)) {
             const res = await module.pool.query({
-                name: 'existsArray',
+                name: "existsArray",
                 text: `
                 SELECT o."_key" k
                   FROM "legacy_object_live" o
                  WHERE o."_key" = ANY($1::TEXT[])`,
-                values: [key],
+                values: [key]
             });
             return key.map(k => res.rows.some(r => r.k === k));
         }
         const res = await module.pool.query({
-            name: 'exists',
+            name: "exists",
             text: `
             SELECT EXISTS(SELECT *
                     FROM "legacy_object_live"
                    WHERE "_key" = $1::TEXT
                    LIMIT 1) e`,
-            values: [key],
+            values: [key]
         });
         return res.rows[0].e;
     };
 
     module.scan = async function (params) {
         let { match } = params;
-        if (match.startsWith('*')) {
+        if (match.startsWith("*")) {
             match = `%${match.substring(1)}`;
         }
-        if (match.endsWith('*')) {
+        if (match.endsWith("*")) {
             match = `${match.substring(0, match.length - 1)}%`;
         }
 
@@ -64,7 +66,7 @@ module.exports = function (module) {
             text: `
         SELECT o."_key"
         FROM "legacy_object_live" o
-        WHERE o."_key" LIKE '${match}'`,
+        WHERE o."_key" LIKE '${match}'`
         });
 
         return res.rows.map(r => r._key);
@@ -76,11 +78,11 @@ module.exports = function (module) {
         }
 
         await module.pool.query({
-            name: 'delete',
+            name: "delete",
             text: `
 DELETE FROM "legacy_object"
  WHERE "_key" = $1::TEXT`,
-            values: [key],
+            values: [key]
         });
     };
 
@@ -90,11 +92,11 @@ DELETE FROM "legacy_object"
         }
 
         await module.pool.query({
-            name: 'deleteAll',
+            name: "deleteAll",
             text: `
 DELETE FROM "legacy_object"
  WHERE "_key" = ANY($1::TEXT[])`,
-            values: [keys],
+            values: [keys]
         });
     };
 
@@ -104,7 +106,7 @@ DELETE FROM "legacy_object"
         }
 
         const res = await module.pool.query({
-            name: 'get',
+            name: "get",
             text: `
 SELECT s."data" t
   FROM "legacy_object_live" o
@@ -113,7 +115,7 @@ SELECT s."data" t
         AND o."type" = s."type"
  WHERE o."_key" = $1::TEXT
  LIMIT 1`,
-            values: [key],
+            values: [key]
         });
 
         return res.rows.length ? res.rows[0].t : null;
@@ -124,16 +126,16 @@ SELECT s."data" t
             return;
         }
 
-        await module.transaction(async (client) => {
-            await helpers.ensureLegacyObjectType(client, key, 'string');
+        await module.transaction(async client => {
+            await helpers.ensureLegacyObjectType(client, key, "string");
             await client.query({
-                name: 'set',
+                name: "set",
                 text: `
 INSERT INTO "legacy_string" ("_key", "data")
 VALUES ($1::TEXT, $2::TEXT)
 ON CONFLICT ("_key")
 DO UPDATE SET "data" = $2::TEXT`,
-                values: [key, value],
+                values: [key, value]
             });
         });
     };
@@ -143,51 +145,51 @@ DO UPDATE SET "data" = $2::TEXT`,
             return;
         }
 
-        return await module.transaction(async (client) => {
-            await helpers.ensureLegacyObjectType(client, key, 'string');
+        return await module.transaction(async client => {
+            await helpers.ensureLegacyObjectType(client, key, "string");
             const res = await client.query({
-                name: 'increment',
+                name: "increment",
                 text: `
 INSERT INTO "legacy_string" ("_key", "data")
 VALUES ($1::TEXT, '1')
 ON CONFLICT ("_key")
 DO UPDATE SET "data" = ("legacy_string"."data"::NUMERIC + 1)::TEXT
 RETURNING "data" d`,
-                values: [key],
+                values: [key]
             });
             return parseFloat(res.rows[0].d);
         });
     };
 
     module.rename = async function (oldKey, newKey) {
-        await module.transaction(async (client) => {
+        await module.transaction(async client => {
             await client.query({
-                name: 'deleteRename',
+                name: "deleteRename",
                 text: `
     DELETE FROM "legacy_object"
      WHERE "_key" = $1::TEXT`,
-                values: [newKey],
+                values: [newKey]
             });
             await client.query({
-                name: 'rename',
+                name: "rename",
                 text: `
 UPDATE "legacy_object"
 SET "_key" = $2::TEXT
 WHERE "_key" = $1::TEXT`,
-                values: [oldKey, newKey],
+                values: [oldKey, newKey]
             });
         });
     };
 
     module.type = async function (key) {
         const res = await module.pool.query({
-            name: 'type',
+            name: "type",
             text: `
 SELECT "type"::TEXT t
   FROM "legacy_object_live"
  WHERE "_key" = $1::TEXT
  LIMIT 1`,
-            values: [key],
+            values: [key]
         });
 
         return res.rows.length ? res.rows[0].t : null;
@@ -195,17 +197,17 @@ SELECT "type"::TEXT t
 
     async function doExpire(key, date) {
         await module.pool.query({
-            name: 'expire',
+            name: "expire",
             text: `
 UPDATE "legacy_object"
    SET "expireAt" = $2::TIMESTAMPTZ
  WHERE "_key" = $1::TEXT`,
-            values: [key, date],
+            values: [key, date]
         });
     }
 
     module.expire = async function (key, seconds) {
-        await doExpire(key, new Date(((Date.now() / 1000) + seconds) * 1000));
+        await doExpire(key, new Date((Date.now() / 1000 + seconds) * 1000));
     };
 
     module.expireAt = async function (key, timestamp) {
@@ -222,23 +224,25 @@ UPDATE "legacy_object"
 
     async function getExpire(key) {
         const res = await module.pool.query({
-            name: 'ttl',
+            name: "ttl",
             text: `
 SELECT "expireAt"::TEXT
   FROM "legacy_object"
  WHERE "_key" = $1::TEXT
  LIMIT 1`,
-            values: [key],
+            values: [key]
         });
 
-        return res.rows.length ? new Date(res.rows[0].expireAt).getTime() : null;
+        return res.rows.length
+            ? new Date(res.rows[0].expireAt).getTime()
+            : null;
     }
 
     module.ttl = async function (key) {
-        return Math.round((await getExpire(key) - Date.now()) / 1000);
+        return Math.round(((await getExpire(key)) - Date.now()) / 1000);
     };
 
     module.pttl = async function (key) {
-        return await getExpire(key) - Date.now();
+        return (await getExpire(key)) - Date.now();
     };
 };

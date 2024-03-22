@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const plugins = require('../plugins');
-const db = require('../database');
-const utils = require('../utils');
+const plugins = require("../plugins");
+const db = require("../database");
+const utils = require("../utils");
 
 const rewards = module.exports;
 
@@ -14,10 +14,10 @@ rewards.save = async function (data) {
         const rewardsData = data.rewards;
         delete data.rewards;
         if (!parseInt(data.id, 10)) {
-            data.id = await db.incrObjectField('global', 'rewards:id');
+            data.id = await db.incrObjectField("global", "rewards:id");
         }
         await rewards.delete(data);
-        await db.setAdd('rewards:list', data.id);
+        await db.setAdd("rewards:list", data.id);
         await db.setObject(`rewards:id:${data.id}`, data);
         await db.setObject(`rewards:id:${data.id}:rewards`, rewardsData);
     }
@@ -29,53 +29,58 @@ rewards.save = async function (data) {
 
 rewards.delete = async function (data) {
     await Promise.all([
-        db.setRemove('rewards:list', data.id),
+        db.setRemove("rewards:list", data.id),
         db.delete(`rewards:id:${data.id}`),
-        db.delete(`rewards:id:${data.id}:rewards`),
+        db.delete(`rewards:id:${data.id}:rewards`)
     ]);
 };
 
 rewards.get = async function () {
     return await utils.promiseParallel({
         active: getActiveRewards(),
-        conditions: plugins.hooks.fire('filter:rewards.conditions', []),
-        conditionals: plugins.hooks.fire('filter:rewards.conditionals', []),
-        rewards: plugins.hooks.fire('filter:rewards.rewards', []),
+        conditions: plugins.hooks.fire("filter:rewards.conditions", []),
+        conditionals: plugins.hooks.fire("filter:rewards.conditionals", []),
+        rewards: plugins.hooks.fire("filter:rewards.rewards", [])
     });
 };
 
 async function saveConditions(data) {
     const rewardsPerCondition = {};
-    await db.delete('conditions:active');
+    await db.delete("conditions:active");
     const conditions = [];
 
-    data.forEach((reward) => {
+    data.forEach(reward => {
         conditions.push(reward.condition);
-        rewardsPerCondition[reward.condition] = rewardsPerCondition[reward.condition] || [];
+        rewardsPerCondition[reward.condition] =
+            rewardsPerCondition[reward.condition] || [];
         rewardsPerCondition[reward.condition].push(reward.id);
     });
 
-    await db.setAdd('conditions:active', conditions);
+    await db.setAdd("conditions:active", conditions);
 
-    await Promise.all(Object.keys(rewardsPerCondition).map(c => db.setAdd(`condition:${c}:rewards`, rewardsPerCondition[c])));
+    await Promise.all(
+        Object.keys(rewardsPerCondition).map(c =>
+            db.setAdd(`condition:${c}:rewards`, rewardsPerCondition[c])
+        )
+    );
 }
 
 async function getActiveRewards() {
     async function load(id) {
         const [main, rewards] = await Promise.all([
             db.getObject(`rewards:id:${id}`),
-            db.getObject(`rewards:id:${id}:rewards`),
+            db.getObject(`rewards:id:${id}:rewards`)
         ]);
         if (main) {
-            main.disabled = main.disabled === 'true';
+            main.disabled = main.disabled === "true";
             main.rewards = rewards;
         }
         return main;
     }
 
-    const rewardsList = await db.getSetMembers('rewards:list');
+    const rewardsList = await db.getSetMembers("rewards:list");
     const rewardData = await Promise.all(rewardsList.map(id => load(id)));
     return rewardData.filter(Boolean);
 }
 
-require('../promisify')(rewards);
+require("../promisify")(rewards);

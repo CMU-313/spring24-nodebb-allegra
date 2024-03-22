@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-const db = require('../database');
+const db = require("../database");
 
 module.exports = function (Categories) {
     Categories.markAsRead = async function (cids, uid) {

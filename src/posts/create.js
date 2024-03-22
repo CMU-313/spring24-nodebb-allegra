@@ -34,7 +34,7 @@ module.exports = function (Posts) {
             tid: tid,
             content: content,
             timestamp: timestamp,
-            isAnonymous: !!anonymous, // Still store the actual state of isAnonymous
+            isAnonymous: !!anonymous // Still store the actual state of isAnonymous
         };
 
         if (data.toPid) {
@@ -49,7 +49,7 @@ module.exports = function (Posts) {
 
         let result = await plugins.hooks.fire("filter:post.create", {
             post: postData,
-            data: data,
+            data: data
         });
         postData = result.post;
         await db.setObject(`post:${postData.pid}`, postData);
@@ -65,12 +65,12 @@ module.exports = function (Posts) {
             categories.onNewPostMade(topicData.cid, topicData.pinned, postData),
             groups.onNewPostMade(postData),
             addReplyTo(postData, timestamp),
-            Posts.uploads.sync(postData.pid),
+            Posts.uploads.sync(postData.pid)
         ]);
 
         result = await plugins.hooks.fire("filter:post.get", {
             post: postData,
-            uid: data.uid,
+            uid: data.uid
         });
         result.post.isMain = isMain;
         plugins.hooks.fire("action:post.save", { post: _.clone(result.post) });
@@ -86,9 +86,9 @@ module.exports = function (Posts) {
             db.sortedSetAdd(
                 `pid:${postData.toPid}:replies`,
                 timestamp,
-                postData.pid,
+                postData.pid
             ),
-            db.incrObjectField(`post:${postData.toPid}`, "replies"),
+            db.incrObjectField(`post:${postData.toPid}`, "replies")
         ]);
     }
 };

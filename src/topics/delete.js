@@ -1,13 +1,12 @@
-'use strict';
+"use strict";
 
-const db = require('../database');
+const db = require("../database");
 
-const user = require('../user');
-const posts = require('../posts');
-const categories = require('../categories');
-const plugins = require('../plugins');
-const batch = require('../batch');
-
+const user = require("../user");
+const posts = require("../posts");
+const categories = require("../categories");
+const plugins = require("../plugins");
+const batch = require("../batch");
 
 module.exports = function (Topics) {
     Topics.delete = async function (tid, uid) {
@@ -15,14 +14,14 @@ module.exports = function (Topics) {
         await Topics.setTopicFields(tid, {
             deleted: 1,
             deleterUid: uid,
-            deletedTimestamp: Date.now(),
+            deletedTimestamp: Date.now()
         });
     };
 
     async function removeTopicPidsFromCid(tid) {
         const [cid, pids] = await Promise.all([
-            Topics.getTopicField(tid, 'cid'),
-            Topics.getPids(tid),
+            Topics.getTopicField(tid, "cid"),
+            Topics.getPids(tid)
         ]);
         await db.sortedSetRemove(`cid:${cid}:pids`, pids);
         await categories.updateRecentTidForCid(cid);
@@ -30,10 +29,14 @@ module.exports = function (Topics) {
 
     async function addTopicPidsToCid(tid) {
         const [cid, pids] = await Promise.all([
-            Topics.getTopicField(tid, 'cid'),
-            Topics.getPids(tid),
+            Topics.getTopicField(tid, "cid"),
+            Topics.getPids(tid)
         ]);
-        let postData = await posts.getPostsFields(pids, ['pid', 'timestamp', 'deleted']);
+        let postData = await posts.getPostsFields(pids, [
+            "pid",
+            "timestamp",
+            "deleted"
+        ]);
         postData = postData.filter(post => post && !post.deleted);
         const pidsToAdd = postData.map(post => post.pid);
         const scores = postData.map(post => post.timestamp);
@@ -43,19 +46,21 @@ module.exports = function (Topics) {
 
     Topics.restore = async function (tid) {
         await Promise.all([
-            Topics.deleteTopicFields(tid, [
-                'deleterUid', 'deletedTimestamp',
-            ]),
-            addTopicPidsToCid(tid),
+            Topics.deleteTopicFields(tid, ["deleterUid", "deletedTimestamp"]),
+            addTopicPidsToCid(tid)
         ]);
-        await Topics.setTopicField(tid, 'deleted', 0);
+        await Topics.setTopicField(tid, "deleted", 0);
     };
 
     Topics.purgePostsAndTopic = async function (tid, uid) {
-        const mainPid = await Topics.getTopicField(tid, 'mainPid');
-        await batch.processSortedSet(`tid:${tid}:posts`, async (pids) => {
-            await posts.purge(pids, uid);
-        }, { alwaysStartAt: 0, batch: 500 });
+        const mainPid = await Topics.getTopicField(tid, "mainPid");
+        await batch.processSortedSet(
+            `tid:${tid}:posts`,
+            async pids => {
+                await posts.purge(pids, uid);
+            },
+            { alwaysStartAt: 0, batch: 500 }
+        );
         await posts.purge(mainPid, uid);
         await Topics.purge(tid, uid);
     };
@@ -63,7 +68,7 @@ module.exports = function (Topics) {
     Topics.purge = async function (tid, uid) {
         const [deletedTopic, tags] = await Promise.all([
             Topics.getTopicData(tid),
-            Topics.getTopicTags(tid),
+            Topics.getTopicTags(tid)
         ]);
         if (!deletedTopic) {
             return;
@@ -78,30 +83,36 @@ module.exports = function (Topics) {
                 `tid:${tid}:posts`,
                 `tid:${tid}:posts:votes`,
                 `tid:${tid}:bookmarks`,
-                `tid:${tid}:posters`,
+                `tid:${tid}:posters`
             ]),
-            db.sortedSetsRemove([
-                'topics:tid',
-                'topics:recent',
-                'topics:posts',
-                'topics:views',
-                'topics:votes',
-                'topics:scheduled',
-            ], tid),
+            db.sortedSetsRemove(
+                [
+                    "topics:tid",
+                    "topics:recent",
+                    "topics:posts",
+                    "topics:views",
+                    "topics:votes",
+                    "topics:scheduled"
+                ],
+                tid
+            ),
             deleteTopicFromCategoryAndUser(tid),
             Topics.deleteTopicTags(tid),
             Topics.events.purge(tid),
             Topics.thumbs.deleteAll(tid),
-            reduceCounters(tid),
+            reduceCounters(tid)
         ]);
-        plugins.hooks.fire('action:topic.purge', { topic: deletedTopic, uid: uid });
+        plugins.hooks.fire("action:topic.purge", {
+            topic: deletedTopic,
+            uid: uid
+        });
         await db.delete(`topic:${tid}`);
     };
 
     async function deleteFromFollowersIgnorers(tid) {
         const [followers, ignorers] = await Promise.all([
             db.getSetMembers(`tid:${tid}:followers`),
-            db.getSetMembers(`tid:${tid}:ignorers`),
+            db.getSetMembers(`tid:${tid}:ignorers`)
         ]);
         const followerKeys = followers.map(uid => `uid:${uid}:followed_tids`);
         const ignorerKeys = ignorers.map(uid => `uid:${uid}ignored_tids`);
@@ -109,33 +120,47 @@ module.exports = function (Topics) {
     }
 
     async function deleteTopicFromCategoryAndUser(tid) {
-        const topicData = await Topics.getTopicFields(tid, ['cid', 'uid']);
+        const topicData = await Topics.getTopicFields(tid, ["cid", "uid"]);
         await Promise.all([
-            db.sortedSetsRemove([
-                `cid:${topicData.cid}:tids`,
-                `cid:${topicData.cid}:tids:pinned`,
-                `cid:${topicData.cid}:tids:posts`,
-                `cid:${topicData.cid}:tids:lastposttime`,
-                `cid:${topicData.cid}:tids:votes`,
-                `cid:${topicData.cid}:tids:views`,
-                `cid:${topicData.cid}:recent_tids`,
-                `cid:${topicData.cid}:uid:${topicData.uid}:tids`,
-                `uid:${topicData.uid}:topics`,
-            ], tid),
-            user.decrementUserFieldBy(topicData.uid, 'topiccount', 1),
+            db.sortedSetsRemove(
+                [
+                    `cid:${topicData.cid}:tids`,
+                    `cid:${topicData.cid}:tids:pinned`,
+                    `cid:${topicData.cid}:tids:posts`,
+                    `cid:${topicData.cid}:tids:lastposttime`,
+                    `cid:${topicData.cid}:tids:votes`,
+                    `cid:${topicData.cid}:tids:views`,
+                    `cid:${topicData.cid}:recent_tids`,
+                    `cid:${topicData.cid}:uid:${topicData.uid}:tids`,
+                    `uid:${topicData.uid}:topics`
+                ],
+                tid
+            ),
+            user.decrementUserFieldBy(topicData.uid, "topiccount", 1)
         ]);
         await categories.updateRecentTidForCid(topicData.cid);
     }
 
     async function reduceCounters(tid) {
         const incr = -1;
-        await db.incrObjectFieldBy('global', 'topicCount', incr);
-        const topicData = await Topics.getTopicFields(tid, ['cid', 'postcount']);
+        await db.incrObjectFieldBy("global", "topicCount", incr);
+        const topicData = await Topics.getTopicFields(tid, [
+            "cid",
+            "postcount"
+        ]);
         const postCountChange = incr * topicData.postcount;
         await Promise.all([
-            db.incrObjectFieldBy('global', 'postCount', postCountChange),
-            db.incrObjectFieldBy(`category:${topicData.cid}`, 'post_count', postCountChange),
-            db.incrObjectFieldBy(`category:${topicData.cid}`, 'topic_count', incr),
+            db.incrObjectFieldBy("global", "postCount", postCountChange),
+            db.incrObjectFieldBy(
+                `category:${topicData.cid}`,
+                "post_count",
+                postCountChange
+            ),
+            db.incrObjectFieldBy(
+                `category:${topicData.cid}`,
+                "topic_count",
+                incr
+            )
         ]);
     }
 };

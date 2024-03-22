@@ -309,11 +309,9 @@ module.exports = function (module) {
             return 0;
         }
 
-        const count = await module.client
-            .collection("objects")
-            .countDocuments({
-                _key: Array.isArray(keys) ? { $in: keys } : keys
-            });
+        const count = await module.client.collection("objects").countDocuments({
+            _key: Array.isArray(keys) ? { $in: keys } : keys
+        });
         return parseInt(count, 10) || 0;
     };
 

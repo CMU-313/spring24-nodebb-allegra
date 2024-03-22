@@ -24,6 +24,8 @@ jobs:
         steps:
             - uses: actions/checkout@v3
 
+            - run: cp install/package.json package.json
+
             - name: Setup Node.js
               uses: actions/setup-node@v3
               with:
